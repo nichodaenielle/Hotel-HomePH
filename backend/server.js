@@ -402,7 +402,7 @@ app.get('/api/bookings/status/:code', async (req, res) => {
     
     // We only select non-sensitive data (excluding phone numbers, emails, etc.)
     const [rows] = await pool.query(
-      'SELECT confirmation_code, guest_first_name, guest_last_name, room_id, check_in, check_out, total_price, status, purpose FROM bookings WHERE confirmation_code = ? LIMIT 1',
+      'SELECT confirmation_code, guest_first_name, guest_last_name, room_id, check_in, check_out, total_price, status, booking_purpose FROM bookings WHERE confirmation_code = ? LIMIT 1',
       [code]
     );
     
