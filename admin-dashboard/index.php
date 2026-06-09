@@ -1385,7 +1385,9 @@ header("Pragma: no-cache");
         // Auto-detect environment: use localhost for development, production URL otherwise
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:4000/api'
-            : 'https://www.hotelathomeph.com/api'; 
+            : (window.location.hostname.includes('admin.')
+                ? 'https://hotelathomeph.com/api'  // Admin subdomain calls main domain API
+                : 'https://www.hotelathomeph.com/api'); 
         
         let currentApiKey = sessionStorage.getItem('admin_pwd') || '';
         let allBookingsData = []; // Store raw bookings for search/filtering
