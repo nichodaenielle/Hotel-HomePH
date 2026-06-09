@@ -512,7 +512,7 @@ function BookNowContent() {
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
             <h3 className="text-xl font-semibold text-brand-blue mb-4">Scan to Pay</h3>
-            <div className="w-full aspect-[3/4] flex justify-center rounded-xl bg-slate-50 mb-6 overflow-hidden border border-brand-blue/10">
+            <div className="w-full aspect-[3/4] flex justify-center rounded-xl bg-slate-50 mb-6 overflow-hidden border border-brand-blue/10 relative">
               <Image src="/img/payment/gcash.jpg" alt="GCash QR Code Full" fill className="object-contain" sizes="(max-width: 768px) 100vw, 400px" priority />
             </div>
             <a 

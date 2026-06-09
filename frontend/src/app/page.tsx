@@ -191,7 +191,7 @@ export default function Home() {
 
           <div className="grid gap-8 lg:grid-cols-2">
             <article className="overflow-hidden rounded-[32px] border border-primary-100 bg-brand-white shadow-card transition-all duration-300 ease-smooth hover:shadow-xl hover:-translate-y-1">
-              <div className="h-80 w-full overflow-hidden bg-slate-100">
+              <div className="h-80 w-full overflow-hidden bg-slate-100 relative">
                 <Image src="/img/blue-room/blue11.jpg" alt="Luxury Accommodations" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" priority />
               </div>
               <div className="p-8">
@@ -284,7 +284,7 @@ export default function Home() {
                   }
                 ].map((item) => (
                   <article key={item.title} className="overflow-hidden rounded-[28px] border border-primary-100 bg-brand-white shadow-card transition-all duration-300 ease-smooth hover:shadow-lg hover:-translate-y-0.5">
-                    <div className="h-56 overflow-hidden">
+                    <div className="h-56 overflow-hidden relative">
                       <Image src={item.image} alt={item.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" loading="lazy" />
                     </div>
                     <div className="p-6">
