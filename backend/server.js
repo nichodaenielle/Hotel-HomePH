@@ -92,7 +92,8 @@ app.post('/api/bookings', async (req, res) => {
     const {
       roomId, guestFirstName, guestLastName, guestEmail, guestPhone,
       checkIn, checkOut, totalPrice, purpose, guests,
-      proofBase64, idFrontBase64, idBackBase64
+      proofBase64, idFrontBase64, idBackBase64,
+      paymentMethod, amountPaid
     } = req.body;
 
     // --- OVERLAP VALIDATION ---
@@ -120,9 +121,9 @@ app.post('/api/bookings', async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO bookings 
-      (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, booking_purpose) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [confirmationCode, roomId, guestFirstName, guestLastName, guestEmail, guestPhone, checkIn, checkOut, finalPrice, purpose || null]
+      (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, booking_purpose, payment_option, amount_paid) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [confirmationCode, roomId, guestFirstName, guestLastName, guestEmail, guestPhone, checkIn, checkOut, finalPrice, purpose || null, paymentMethod || null, amountPaid || 0]
     );
 
     // Send Email Notifications (Async, so it doesn't block the response if it fails)

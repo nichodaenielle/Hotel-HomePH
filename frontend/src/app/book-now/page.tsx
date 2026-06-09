@@ -446,7 +446,9 @@ function BookNowContent() {
               guests: guests,
               proofBase64,
               idFrontBase64,
-              idBackBase64
+              idBackBase64,
+              paymentMethod: paymentDetails.method,
+              amountPaid: roomTotal
             }),
           });
           

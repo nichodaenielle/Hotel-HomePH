@@ -1603,8 +1603,8 @@ header("Pragma: no-cache");
                     <td><strong>${booking.confirmation_code}</strong></td>
                     <td>${roomNames[booking.room_id] || 'Unknown'}</td>
                     <td>${booking.guest_first_name} ${booking.guest_last_name}</td>
-                    <td>${new Date(booking.check_in).toLocaleDateString()}</td>
-                    <td>${new Date(booking.check_out).toLocaleDateString()}</td>
+                    <td>${new Date(booking.check_in).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })}</td>
+                    <td>${new Date(booking.check_out).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })}</td>
                     <td>₱${Number(booking.total_price).toLocaleString()}</td>
                     <td><span class="status status-${status}">${booking.status}</span></td>
                     <td>
@@ -1893,11 +1893,11 @@ header("Pragma: no-cache");
                     </div>
                     <div>
                         <div style="font-size: 11px; color: rgba(1,20,120,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Check-in</div>
-                        <div>${new Date(booking.check_in).toLocaleDateString()}</div>
+                        <div>${new Date(booking.check_in).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })}</div>
                     </div>
                     <div>
                         <div style="font-size: 11px; color: rgba(1,20,120,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Check-out</div>
-                        <div>${new Date(booking.check_out).toLocaleDateString()}</div>
+                        <div>${new Date(booking.check_out).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })}</div>
                     </div>
                 </div>
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(1,20,120,0.1);">
@@ -1917,12 +1917,12 @@ header("Pragma: no-cache");
                         </div>
                         <div>
                             <div style="font-size: 11px; color: rgba(1,20,120,0.5); margin-bottom: 4px;">Created</div>
-                            <div>${booking.created_at ? new Date(booking.created_at).toLocaleString() : 'N/A'}</div>
+                            <div>${booking.created_at ? new Date(booking.created_at).toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : 'N/A'}</div>
                         </div>
                         ${booking.updated_at ? `
                         <div>
                             <div style="font-size: 11px; color: rgba(1,20,120,0.5); margin-bottom: 4px;">Last Updated</div>
-                            <div>${new Date(booking.updated_at).toLocaleString()}</div>
+                            <div>${new Date(booking.updated_at).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}</div>
                         </div>
                         ` : ''}
                     </div>
