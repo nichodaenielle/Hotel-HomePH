@@ -22,8 +22,8 @@ const mockRooms = [
     id: 3, name: 'Rooftop Lounge', price: 8000, weekendPrice: 10000, capacity: 20, image: '/img/rooftop/rooftop1.jpg',
     imagesCount: 13, folder: 'rooftop', prefix: 'rooftop',
     features: ['150 SQM', 'Outdoor and indoor seating', 'Bar counter', 'Dining table setup', 'Air conditioning and WiFi', '65" Smart TV with Bluetooth speaker', 'Microphone for Karaoke - available upon request', 'Contemporary artwork'],
-    price6Hour: 2000,
-    weekendPrice6Hour: 4000
+    price6Hour: 4000,
+    weekendPrice6Hour: 5000
   },
 ];
 
@@ -668,8 +668,8 @@ function BookNowContent() {
                                 >
                                   <p className="font-bold text-lg">6 Hours</p>
                                   <div className="mt-1 space-y-0.5 text-xs opacity-90">
-                                    <p>₱2,000 <span className="opacity-70">(Weekdays)</span></p>
-                                    <p>₱4,000 <span className="opacity-70">(Weekends)</span></p>
+                                    <p>₱4,000 <span className="opacity-70">(Weekdays)</span></p>
+                                    <p>₱5,000 <span className="opacity-70">(Weekends)</span></p>
                                   </div>
                                 </button>
                                 

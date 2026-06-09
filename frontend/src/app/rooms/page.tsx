@@ -355,8 +355,8 @@ function RooftopCard({ delay = 0 }: { delay?: number }) {
           <div className="mt-3 space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50">Pricing</p>
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-              <span className="text-brand-blue"><span className="font-bold">₱2,000</span> / 6 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
-              <span className="text-brand-blue"><span className="font-bold">₱4,000</span> / 6 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
+              <span className="text-brand-blue"><span className="font-bold">₱4,000</span> / 6 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
+              <span className="text-brand-blue"><span className="font-bold">₱5,000</span> / 6 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
               <span className="text-brand-blue"><span className="font-bold">₱8,000</span> / 12 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
