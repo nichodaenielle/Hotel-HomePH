@@ -159,6 +159,7 @@ app.post('/api/bookings', async (req, res) => {
                       <!-- Header -->
                       <tr>
                         <td style="background: linear-gradient(135deg, #011478 0%, #001a72 100%); padding: 32px 40px; text-align: center;">
+                          <img src="https://hotelathomeph.com/img/logo/hhlogo.png" alt="Hotel at Home" style="width: 80px; height: 80px; margin-bottom: 16px;" />
                           <h1 style="margin: 0; color: #facc15; font-size: 28px; font-weight: normal; letter-spacing: 2px; font-style: italic;">Hotel at Home</h1>
                           <p style="margin: 8px 0 0 0; color: #ffffff; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; font-family: Arial, sans-serif; opacity: 0.9;">New Reservation</p>
                         </td>
@@ -278,6 +279,7 @@ app.post('/api/bookings', async (req, res) => {
                       <!-- Header -->
                       <tr>
                         <td style="background: linear-gradient(135deg, #011478 0%, #001a72 100%); padding: 40px; text-align: center;">
+                          <img src="https://hotelathomeph.com/img/logo/hhlogo.png" alt="Hotel at Home" style="width: 80px; height: 80px; margin-bottom: 16px;" />
                           <h1 style="margin: 0; color: #facc15; font-size: 32px; font-weight: normal; letter-spacing: 2px; font-style: italic;">Hotel at Home</h1>
                           <p style="margin: 12px 0 0 0; color: #ffffff; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; font-family: Arial, sans-serif; opacity: 0.9;">Your Mediterranean Escape</p>
                         </td>
@@ -572,6 +574,7 @@ app.patch('/api/admin/bookings/:id/status', async (req, res) => {
                         <!-- Header -->
                         <tr>
                           <td style="background: linear-gradient(135deg, #011478 0%, #001a72 100%); padding: 40px; text-align: center;">
+                            <img src="https://hotelathomeph.com/img/logo/hhlogo.png" alt="Hotel at Home" style="width: 80px; height: 80px; margin-bottom: 16px;" />
                             <h1 style="margin: 0; color: #facc15; font-size: 32px; font-weight: normal; letter-spacing: 2px; font-style: italic;">Hotel at Home</h1>
                             <p style="margin: 12px 0 0 0; color: #ffffff; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; font-family: Arial, sans-serif; opacity: 0.9;">Your Mediterranean Escape</p>
                           </td>
@@ -693,6 +696,7 @@ app.patch('/api/admin/bookings/:id/status', async (req, res) => {
                         <!-- Header -->
                         <tr>
                           <td style="background: linear-gradient(135deg, #011478 0%, #001a72 100%); padding: 40px; text-align: center;">
+                            <img src="https://hotelathomeph.com/img/logo/hhlogo.png" alt="Hotel at Home" style="width: 80px; height: 80px; margin-bottom: 16px;" />
                             <h1 style="margin: 0; color: #facc15; font-size: 32px; font-weight: normal; letter-spacing: 2px; font-style: italic;">Hotel at Home</h1>
                             <p style="margin: 12px 0 0 0; color: #ffffff; font-size: 12px; text-transform: uppercase; letter-spacing: 3px; font-family: Arial, sans-serif; opacity: 0.9;">Your Mediterranean Escape</p>
                           </td>
