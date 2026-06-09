@@ -120,7 +120,7 @@ app.post('/api/bookings', async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO bookings 
-      (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, purpose) 
+      (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, booking_purpose) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [confirmationCode, roomId, guestFirstName, guestLastName, guestEmail, guestPhone, checkIn, checkOut, finalPrice, purpose || null]
     );
@@ -302,7 +302,7 @@ app.post('/api/admin/block-dates', async (req, res) => {
       
       await pool.query(
         `INSERT INTO bookings 
-        (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, purpose, status) 
+        (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, booking_purpose, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [confirmationCode, rId, 'System', 'Block', 'admin@hotelathomeph.com', 'N/A', checkIn, checkOut, 0, reason || 'Manual Block', 'confirmed']
       );
