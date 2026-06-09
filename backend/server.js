@@ -468,6 +468,39 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+
+// Test database connection on startup but don't crash if it fails
+pool.getConnection()
+  .then(connection => {
+    console.log('Database connected successfully');
+    connection.release();
+  })
+  .catch(err => {
+    console.error('Database connection failed:', err.message);
+    console.log('Server will continue running but database features may not work');
+  });
+
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+// Handle server errors gracefully
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use`);
+  } else {
+    console.error('Server error:', err);
+  }
+  process.exit(1);
+});
+
+// Handle uncaught errors to prevent crashes
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // Don't exit - let the server continue running
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit - let the server continue running
 });
