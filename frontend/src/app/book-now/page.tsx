@@ -656,26 +656,37 @@ function BookNowContent() {
                             {/* Duration Selector */}
                             <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4">
                               <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-3">Select Duration <span className="text-red-500">*</span></p>
-                              <div className="flex flex-wrap gap-2">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* 6 Hours Option */}
                                 <button
                                   onClick={() => { setDuration('6'); setTimeSlot(''); }}
-                                  className={`px-4 py-2 rounded-full border text-sm font-medium transition ${
+                                  className={`p-4 rounded-xl border text-left transition ${
                                     duration === '6'
                                       ? 'bg-brand-blue text-white border-brand-blue'
                                       : 'bg-white text-brand-blue border-brand-blue/20 hover:border-brand-blue/40'
                                   }`}
                                 >
-                                  6 Hours (₱{checkIn && (checkIn.getDay() === 5 || checkIn.getDay() === 6) ? '4,000' : '2,000'})
+                                  <p className="font-bold text-lg">6 Hours</p>
+                                  <div className="mt-1 space-y-0.5 text-xs opacity-90">
+                                    <p>₱2,000 <span className="opacity-70">(Weekdays)</span></p>
+                                    <p>₱4,000 <span className="opacity-70">(Weekends)</span></p>
+                                  </div>
                                 </button>
+                                
+                                {/* 12 Hours Option */}
                                 <button
                                   onClick={() => { setDuration('12'); setTimeSlot(''); }}
-                                  className={`px-4 py-2 rounded-full border text-sm font-medium transition ${
+                                  className={`p-4 rounded-xl border text-left transition ${
                                     duration === '12'
                                       ? 'bg-brand-blue text-white border-brand-blue'
                                       : 'bg-white text-brand-blue border-brand-blue/20 hover:border-brand-blue/40'
                                   }`}
                                 >
-                                  12 Hours (₱{checkIn && (checkIn.getDay() === 5 || checkIn.getDay() === 6) ? '10,000' : '8,000'})
+                                  <p className="font-bold text-lg">12 Hours</p>
+                                  <div className="mt-1 space-y-0.5 text-xs opacity-90">
+                                    <p>₱8,000 <span className="opacity-70">(Weekdays)</span></p>
+                                    <p>₱10,000 <span className="opacity-70">(Weekends)</span></p>
+                                  </div>
                                 </button>
                               </div>
                             </div>

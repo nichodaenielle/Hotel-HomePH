@@ -352,7 +352,17 @@ function RooftopCard({ delay = 0 }: { delay?: number }) {
       <div className="space-y-6 p-8">
         <div>
           <h2 className="text-3xl font-semibold text-brand-blue">Rooftop Lounge</h2>
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60 mt-2">₱2,000/6-hrs • ₱4,000/6-hrs (Weekends) • ₱8,000/12-hrs • ₱10,000/12-hrs (Weekends)</p>
+          <div className="mt-3 space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50">Pricing</p>
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <span className="text-brand-blue"><span className="font-bold">₱2,000</span> / 6 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
+              <span className="text-brand-blue"><span className="font-bold">₱4,000</span> / 6 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <span className="text-brand-blue"><span className="font-bold">₱8,000</span> / 12 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
+              <span className="text-brand-blue"><span className="font-bold">₱10,000</span> / 12 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
+            </div>
+          </div>
         </div>
         <p className="text-brand-blue/70">
           This 150SQM exclusive space is ideal for 15-20 guests, perfect for general hangouts or slow mornings with the cool Amadeo-Tagaytay breeze.
