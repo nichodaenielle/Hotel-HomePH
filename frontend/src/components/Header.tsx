@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
@@ -54,14 +55,12 @@ export default function Header() {
           <div className="relative h-[52px] w-[52px] overflow-hidden rounded-full bg-gradient-to-br from-white/20 to-white/5 p-1.5 
             transition-all duration-300 group-hover:from-white/30 group-hover:to-white/10 group-hover:scale-110
             shadow-lg shadow-brand-blue/20 ring-2 ring-white/10 group-hover:ring-accent/30">
-            <img
+            <Image
               src="/img/logo/hhlogo.png"
               alt="Hotel at Home"
-              width="52"
-              height="52"
-              decoding="async"
-              loading="eager"
-              fetchPriority="high"
+              width={52}
+              height={52}
+              priority
               className="h-full w-full object-contain drop-shadow-lg will-change-transform"
             />
           </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 export default function InfoPage() {
@@ -41,11 +42,14 @@ export default function InfoPage() {
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <div className="overflow-hidden">
-            <img
+          <div className="overflow-hidden relative h-[420px] sm:h-[520px]">
+            <Image
               src="/img/blue-room/blue7.jpg"
               alt="Mediterranean boutique stay"
-              className="h-[420px] w-full object-cover sm:h-[520px] transition-transform duration-700 ease-out group-hover:scale-105"
+              fill
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 80vw"
+              priority
             />
           </div>
         </div>
