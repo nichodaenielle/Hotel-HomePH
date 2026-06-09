@@ -29,6 +29,7 @@ const allowedOrigins = [
   'http://127.0.0.1:8080', // Admin dashboard PHP server (alternate)
   'https://admin.hotelathomeph.com', // Allow admin dashboard
   'https://www.admin.hotelathomeph.com', // Also allow www subdomain for admin
+  'https://goldenrod-coyote-370099.hostingersite.com', // Hostinger preview URL
   null, // Allow requests with no origin (same-origin, mobile apps)
   undefined
 ];
