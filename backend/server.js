@@ -20,18 +20,32 @@ const allowedOrigins = [
   'http://localhost:8080', // Admin dashboard PHP server
   'http://127.0.0.1:8080', // Admin dashboard PHP server (alternate)
   'https://admin.hotelathomeph.com', // Allow admin dashboard
-  'https://www.admin.hotelathomeph.com' // Also allow www subdomain for admin
+  'https://www.admin.hotelathomeph.com', // Also allow www subdomain for admin
+  null, // Allow requests with no origin (same-origin, mobile apps)
+  undefined
 ];
-if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+  // Also add without trailing slash if present
+  if (process.env.FRONTEND_URL.endsWith('/')) {
+    allowedOrigins.push(process.env.FRONTEND_URL.slice(0, -1));
+  }
+}
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (same-origin requests, mobile apps, postman)
+    if (!origin) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
-  }
+  },
+  credentials: true
 })); 
 app.use(express.json({ limit: '50mb' })); // Parses incoming JSON requests, increased limit for image uploads
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
