@@ -761,9 +761,8 @@ function BookNowContent() {
                   {selectedRoomId === 3 ? 'Event Details & Payment' : 'Payment & Verification'}
                 </h2>
                 
-                {selectedRoomId === 3 && (
-                  <div className="space-y-4">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-blue/60">Event Purpose & Details <span className="text-red-500">*</span></p>
+                <div className="space-y-4">
+                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-blue/60">Booking Purpose & Details <span className="text-red-500">*</span></p>
                     <div className="rounded-xl border border-brand-blue/10 bg-white p-4">
                       <p className="text-xs text-brand-blue/60 mb-3">Please specify the purpose of your booking (e.g., Birthday Party, Corporate Meeting, casual hangout) and any specific setup requirements.</p>
                       <textarea 
@@ -771,11 +770,10 @@ function BookNowContent() {
                         onChange={(e) => setPurpose(e.target.value)}
                         rows={4}
                         className="w-full rounded-xl border border-brand-blue/10 bg-brand-blue/5 px-4 py-3 outline-none focus:border-brand-blue transition resize-none"
-                        placeholder="E.g. A small birthday gathering for 15 people..."
+                        placeholder={selectedRoomId === 3 ? "E.g. A small birthday gathering for 15 people..." : "E.g. Weekend getaway, anniversary celebration..."}
                       ></textarea>
                     </div>
                   </div>
-                )}
 
                 <div className="space-y-4">
                   <p className="text-sm font-semibold uppercase tracking-wider text-brand-blue/60">1. Select Payment Method</p>

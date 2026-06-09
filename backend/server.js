@@ -141,7 +141,7 @@ app.post('/api/bookings', async (req, res) => {
         if (idBackBase64) attachments.push({ filename: 'id_back.jpg', path: idBackBase64 });
 
         const mailOptionsAdmin = {
-          from: process.env.EMAIL_USER,
+          from: `"Hotel@Home" <${process.env.EMAIL_USER}>`,
           to: 'hotelathome.ph@gmail.com', // Admin Email
           subject: `New Booking Received: ${confirmationCode}`,
           html: `
@@ -171,7 +171,7 @@ app.post('/api/bookings', async (req, res) => {
         };
         
         const mailOptionsGuest = {
-          from: process.env.EMAIL_USER,
+          from: `"Hotel@Home" <${process.env.EMAIL_USER}>`,
           to: guestEmail,
           subject: `Booking Received - Pending Confirmation`,
           html: `
