@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 export default function RoomsPage() {
@@ -117,11 +118,15 @@ function GoldRoomCard({ delay = 0 }: { delay?: number }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <img
+        <Image
           key={currentIndex}
           src={`/img/gold-room/gold${currentIndex + 1}.jpg`}
           alt="Gold Room"
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          fill
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          priority={currentIndex === 0}
+          loading={currentIndex === 0 ? 'eager' : 'lazy'}
         />
         {/* Gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -211,11 +216,15 @@ function BlueRoomCard({ delay = 0 }: { delay?: number }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <img
+        <Image
           key={currentIndex}
           src={`/img/blue-room/blue${currentIndex + 1}.jpg`}
           alt="Blue Room"
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          fill
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          priority={currentIndex === 0}
+          loading={currentIndex === 0 ? 'eager' : 'lazy'}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="absolute right-4 top-4 rounded-full bg-gradient-to-r from-accent to-accent-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-blue shadow-lg">
@@ -304,11 +313,15 @@ function RooftopCard({ delay = 0 }: { delay?: number }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <img
+        <Image
           key={currentIndex}
           src={`/img/rooftop/rooftop${currentIndex + 1}.jpg`}
           alt="Rooftop Lounge"
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          fill
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          priority={currentIndex === 0}
+          loading={currentIndex === 0 ? 'eager' : 'lazy'}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="absolute right-4 top-4 rounded-full bg-gradient-to-r from-accent to-accent-300 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-brand-blue shadow-lg">

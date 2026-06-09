@@ -2,6 +2,7 @@
 import React, { useState, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useToast } from '@/components/Toast';
 
 // --- MOCK DATA ---
@@ -512,7 +513,7 @@ function BookNowContent() {
             </button>
             <h3 className="text-xl font-semibold text-brand-blue mb-4">Scan to Pay</h3>
             <div className="w-full aspect-[3/4] flex justify-center rounded-xl bg-slate-50 mb-6 overflow-hidden border border-brand-blue/10">
-              <img src="/img/payment/gcash.jpg" alt="GCash QR Code Full" className="w-full h-full object-contain" />
+              <Image src="/img/payment/gcash.jpg" alt="GCash QR Code Full" fill className="object-contain" sizes="(max-width: 768px) 100vw, 400px" priority />
             </div>
             <a 
               href="/img/payment/gcash.jpg" 
@@ -560,7 +561,7 @@ function BookNowContent() {
                     >
                       <div className="h-32 w-full overflow-hidden bg-slate-200 relative">
                         {room.image ? (
-                           <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
+                           <Image src={room.image} alt={room.name} fill className="object-cover" sizes="128px" loading="lazy" />
                         ) : (
                            <div className="absolute inset-0 flex items-center justify-center text-sm text-brand-blue/50">Image</div>
                         )}
@@ -797,7 +798,7 @@ function BookNowContent() {
                       className="w-32 h-32 flex-shrink-0 bg-slate-50 rounded-xl overflow-hidden border border-brand-blue/10 shadow-sm relative group cursor-pointer"
                       onClick={() => setViewQrFullscreen(true)}
                     >
-                      <img src="/img/payment/gcash.jpg" alt="GCash QR Code" className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                      <Image src="/img/payment/gcash.jpg" alt="GCash QR Code" fill className="object-cover transition duration-300 group-hover:scale-105" sizes="128px" priority />
                       <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
                         <svg className="w-8 h-8 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
                       </div>
@@ -1062,7 +1063,7 @@ function RoomDetailsModal({ room, onClose }: { room: typeof mockRooms[0], onClos
         
         {/* Carousel */}
         <div className="relative h-64 sm:h-80 bg-slate-100 flex-shrink-0">
-          <img src={`/img/${room.folder}/${room.prefix}${currentIdx + 1}.jpg`} alt={room.name} className="w-full h-full object-cover" />
+          <Image src={`/img/${room.folder}/${room.prefix}${currentIdx + 1}.jpg`} alt={room.name} fill className="object-cover" sizes="(max-width: 640px) 100vw, 500px" priority />
           <button onClick={handlePrev} className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-brand-blue/80 hover:bg-brand-blue p-2 text-white transition">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>

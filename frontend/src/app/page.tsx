@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
@@ -191,7 +192,7 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-2">
             <article className="overflow-hidden rounded-[32px] border border-primary-100 bg-brand-white shadow-card transition-all duration-300 ease-smooth hover:shadow-xl hover:-translate-y-1">
               <div className="h-80 w-full overflow-hidden bg-slate-100">
-                <img src="/img/blue-room/blue11.jpg" alt="Luxury Accommodations" className="h-full w-full object-cover" />
+                <Image src="/img/blue-room/blue11.jpg" alt="Luxury Accommodations" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" priority />
               </div>
               <div className="p-8">
                 <h3 className="text-2xl font-semibold text-primary-900">Luxury Accommodations</h3>
@@ -284,7 +285,7 @@ export default function Home() {
                 ].map((item) => (
                   <article key={item.title} className="overflow-hidden rounded-[28px] border border-primary-100 bg-brand-white shadow-card transition-all duration-300 ease-smooth hover:shadow-lg hover:-translate-y-0.5">
                     <div className="h-56 overflow-hidden">
-                      <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                      <Image src={item.image} alt={item.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" loading="lazy" />
                     </div>
                     <div className="p-6">
                       <h3 className="text-xl font-semibold text-primary-900">{item.title}</h3>
