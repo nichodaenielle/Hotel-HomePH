@@ -60,7 +60,8 @@ export default function Home() {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
+            poster="/videos/walkthrough-poster.jpg"
             className="absolute inset-0 w-full h-full object-cover"
           >
             <source src="/videos/walkthrough.mp4" type="video/mp4" />
