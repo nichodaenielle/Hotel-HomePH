@@ -1,0 +1,149 @@
+/* Preconnect to Google Fonts for faster loading */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=optional');
+
+/* Preconnect to font files domain */
+@supports (font-display: optional) {
+  @font-face {
+    font-family: 'ITC Edwardian Script';
+    src: url('/fonts/edwardianscriptitc.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: optional;
+  }
+}
+
+/* Fallback for browsers without font-display:optional support */
+@supports not (font-display: optional) {
+  @font-face {
+    font-family: 'ITC Edwardian Script';
+    src: url('/fonts/edwardianscriptitc.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    @apply bg-brand-white text-brand-blue font-sans;
+    margin: 0;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .font-script {
+    font-family: 'ITC Edwardian Script', cursive;
+  }
+  
+  /* Modern card component */
+  .card-modern {
+    @apply bg-white rounded-2xl shadow-card transition-all duration-300;
+    @apply hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  /* Button primary style */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 
+           text-sm font-semibold text-brand-blue transition-all duration-200;
+    @apply hover:bg-accent-300 hover:shadow-glow hover:-translate-y-0.5;
+    @apply active:translate-y-0 active:shadow-none;
+  }
+  
+  /* Section container */
+  .section-container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+  
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-blue to-primary-600 bg-clip-text text-transparent;
+  }
+}
+
+@layer utilities {
+  /* Safe area padding for mobile */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
