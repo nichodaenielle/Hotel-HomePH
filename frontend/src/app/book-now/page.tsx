@@ -21,7 +21,9 @@ const mockRooms = [
   { 
     id: 3, name: 'Rooftop Lounge', price: 8000, weekendPrice: 10000, capacity: 20, image: '/img/rooftop/rooftop1.jpg',
     imagesCount: 13, folder: 'rooftop', prefix: 'rooftop',
-    features: ['150 SQM', 'Outdoor and indoor seating', 'Bar counter', 'Dining table setup', 'Air conditioning and WiFi', '65" Smart TV with Bluetooth speaker', 'Microphone for Karaoke - available upon request', 'Contemporary artwork'] 
+    features: ['150 SQM', 'Outdoor and indoor seating', 'Bar counter', 'Dining table setup', 'Air conditioning and WiFi', '65" Smart TV with Bluetooth speaker', 'Microphone for Karaoke - available upon request', 'Contemporary artwork'],
+    price6Hour: 2000,
+    weekendPrice6Hour: 4000
   },
 ];
 
@@ -296,6 +298,7 @@ function BookNowContent() {
   const [guestDetails, setGuestDetails] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [paymentDetails, setPaymentDetails] = useState<{ method: string; proof: File | null; idFront: File | null; idBack: File | null }>({ method: 'gcash', proof: null, idFront: null, idBack: null });
   const [timeSlot, setTimeSlot] = useState('');
+  const [duration, setDuration] = useState<'6' | '12'>('12'); // 6-hour or 12-hour booking
   const [isCheckingDates, setIsCheckingDates] = useState(false);
   const [datesAvailable, setDatesAvailable] = useState(!!(searchParams.get('checkIn') && searchParams.get('checkOut')));
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
@@ -364,7 +367,15 @@ function BookNowContent() {
 
   let roomTotal = null;
   if (selectedRoom && selectedRoom.price !== null) {
-    if (nights > 0 && checkIn) {
+    if (selectedRoomId === 3) {
+      // Rooftop Lounge pricing based on duration
+      const isWeekend = checkIn ? (checkIn.getDay() === 5 || checkIn.getDay() === 6) : false;
+      if (duration === '6') {
+        roomTotal = isWeekend ? (selectedRoom.weekendPrice6Hour || 4000) : (selectedRoom.price6Hour || 2000);
+      } else {
+        roomTotal = isWeekend ? (selectedRoom.weekendPrice || 10000) : (selectedRoom.price || 8000);
+      }
+    } else if (nights > 0 && checkIn) {
       roomTotal = 0;
       for (let i = 0; i < nights; i++) {
         const currentDate = new Date(checkIn);
@@ -415,7 +426,7 @@ function BookNowContent() {
           const idFrontBase64 = paymentDetails.idFront ? await toBase64(paymentDetails.idFront) : null;
           const idBackBase64 = paymentDetails.idBack ? await toBase64(paymentDetails.idBack) : null;
 
-          const finalPurpose = selectedRoomId === 3 && timeSlot ? `${purpose}\n\nTime Slot: ${timeSlot}` : purpose;
+          const finalPurpose = selectedRoomId === 3 && timeSlot ? `${purpose}\n\nDuration: ${duration} Hours\nTime Slot: ${timeSlot}` : purpose;
 
           const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
           
@@ -641,40 +652,73 @@ function BookNowContent() {
                           <p className="font-medium">{checkIn ? checkIn.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }) : 'Select date'}</p>
                         </div>
                         {checkIn && (
-                          <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4 mt-4">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-3">Select 12-Hour Time Slot <span className="text-red-500">*</span></p>
-                            <div className="flex flex-wrap gap-2">
-                              {['08:00 AM - 08:00 PM', '10:00 AM - 10:00 PM', '02:00 PM - 02:00 AM'].map(slot => {
-                                const isMorningSlot = slot.includes('08:00 AM') || slot.includes('10:00 AM');
-                                const isPrevNightBooked = checkIn ? blockedDates.includes(formatDate(addDays(checkIn, -1))) : false;
-                                const isDisabled = isPrevNightBooked && isMorningSlot;
-
-                                return (
-                                  <button
-                                    key={slot}
-                                    onClick={() => !isDisabled && setTimeSlot(slot)}
-                                    disabled={isDisabled}
-                                    className={`px-3 py-1.5 rounded-full border text-sm font-medium transition ${
-                                      isDisabled 
-                                        ? 'bg-brand-blue/5 text-brand-blue/30 border-brand-blue/10 cursor-not-allowed'
-                                        : timeSlot === slot 
-                                          ? 'bg-brand-blue text-white border-brand-blue' 
-                                          : 'bg-white text-brand-blue border-brand-blue/20 hover:border-brand-blue/40'
-                                    }`}
-                                    title={isDisabled ? "Guests are checking out at 12:00 PM today." : ""}
-                                  >
-                                    {slot}
-                                  </button>
-                                );
-                              })}
+                          <>
+                            {/* Duration Selector */}
+                            <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4">
+                              <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-3">Select Duration <span className="text-red-500">*</span></p>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => { setDuration('6'); setTimeSlot(''); }}
+                                  className={`px-4 py-2 rounded-full border text-sm font-medium transition ${
+                                    duration === '6'
+                                      ? 'bg-brand-blue text-white border-brand-blue'
+                                      : 'bg-white text-brand-blue border-brand-blue/20 hover:border-brand-blue/40'
+                                  }`}
+                                >
+                                  6 Hours (₱{checkIn && (checkIn.getDay() === 5 || checkIn.getDay() === 6) ? '4,000' : '2,000'})
+                                </button>
+                                <button
+                                  onClick={() => { setDuration('12'); setTimeSlot(''); }}
+                                  className={`px-4 py-2 rounded-full border text-sm font-medium transition ${
+                                    duration === '12'
+                                      ? 'bg-brand-blue text-white border-brand-blue'
+                                      : 'bg-white text-brand-blue border-brand-blue/20 hover:border-brand-blue/40'
+                                  }`}
+                                >
+                                  12 Hours (₱{checkIn && (checkIn.getDay() === 5 || checkIn.getDay() === 6) ? '10,000' : '8,000'})
+                                </button>
+                              </div>
                             </div>
-                            {checkIn && blockedDates.includes(formatDate(addDays(checkIn, -1))) && (
-                              <p className="text-xs text-brand-blue/60 mt-3 font-medium flex items-start gap-1.5">
-                                <svg className="w-4 h-4 text-brand-blue/50 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                Morning slots are unavailable because there are guests checking out at 12:00 PM today.
-                              </p>
-                            )}
-                          </div>
+
+                            {/* Time Slot Selector */}
+                            <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4">
+                              <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-3">Select {duration}-Hour Time Slot <span className="text-red-500">*</span></p>
+                              <div className="flex flex-wrap gap-2">
+                                {(duration === '6'
+                                  ? ['09:00 AM - 03:00 PM', '03:00 PM - 09:00 PM', '06:00 PM - 12:00 AM']
+                                  : ['08:00 AM - 08:00 PM', '10:00 AM - 10:00 PM', '02:00 PM - 02:00 AM']
+                                ).map(slot => {
+                                  const isMorningSlot = slot.includes('09:00 AM') || slot.includes('08:00 AM') || slot.includes('10:00 AM');
+                                  const isPrevNightBooked = checkIn ? blockedDates.includes(formatDate(addDays(checkIn, -1))) : false;
+                                  const isDisabled = isPrevNightBooked && isMorningSlot;
+
+                                  return (
+                                    <button
+                                      key={slot}
+                                      onClick={() => !isDisabled && setTimeSlot(slot)}
+                                      disabled={isDisabled}
+                                      className={`px-3 py-1.5 rounded-full border text-sm font-medium transition ${
+                                        isDisabled
+                                          ? 'bg-brand-blue/5 text-brand-blue/30 border-brand-blue/10 cursor-not-allowed'
+                                          : timeSlot === slot
+                                            ? 'bg-brand-blue text-white border-brand-blue'
+                                            : 'bg-white text-brand-blue border-brand-blue/20 hover:border-brand-blue/40'
+                                      }`}
+                                      title={isDisabled ? "Guests are checking out at 12:00 PM today." : ""}
+                                    >
+                                      {slot}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              {checkIn && blockedDates.includes(formatDate(addDays(checkIn, -1))) && (
+                                <p className="text-xs text-brand-blue/60 mt-3 font-medium flex items-start gap-1.5">
+                                  <svg className="w-4 h-4 text-brand-blue/50 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                  Morning slots are unavailable because there are guests checking out at 12:00 PM today.
+                                </p>
+                              )}
+                            </div>
+                          </>
                         )}
                       </>
                     ) : (
@@ -974,9 +1018,15 @@ function BookNowContent() {
                     <p className="text-white/60 mb-1 uppercase tracking-wider text-xs">Event Date</p>
                     <p className="font-medium">{checkIn ? checkIn.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '--'}</p>
                   </div>
+                  {duration && (
+                    <div>
+                      <p className="text-white/60 mb-1 uppercase tracking-wider text-xs">Duration</p>
+                      <p className="font-medium">{duration} Hours</p>
+                    </div>
+                  )}
                   {timeSlot && (
                     <div>
-                      <p className="text-white/60 mb-1 uppercase tracking-wider text-xs">Time Slot (12 Hrs)</p>
+                      <p className="text-white/60 mb-1 uppercase tracking-wider text-xs">Time Slot</p>
                       <p className="font-medium">{timeSlot}</p>
                     </div>
                   )}
