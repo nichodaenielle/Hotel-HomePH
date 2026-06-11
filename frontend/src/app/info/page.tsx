@@ -189,7 +189,7 @@ export default function InfoPage() {
             <p className="text-sm uppercase tracking-[0.28em] text-brand-blue/60">Getting Here</p>
             <h2 className="mt-4 text-3xl font-semibold text-brand-blue md:text-4xl">How to Reach from Manila</h2>
             <p className="mt-4 text-base leading-8 text-brand-blue/70 max-w-2xl mx-auto">
-              Choose your preferred mode of transportation. We've made it easy for you to plan your journey.
+              Choose your preferred mode of transportation. We&apos;ve made it easy for you to plan your journey.
             </p>
           </div>
 
