@@ -2,12 +2,19 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 
 export default function Home() {
   const { showToast } = useToast();
+  const [isVisible, setIsVisible] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(false);
+
+  useEffect(() => {
+    setHeroVisible(true);
+    setIsVisible(true);
+  }, []);
   const addDays = (date: string | Date, days: number) => {
     const value = new Date(date);
     value.setDate(value.getDate() + days);
@@ -73,20 +80,26 @@ export default function Home() {
 
           {/* Content overlay */}
           <div className="relative z-10 flex items-center justify-center px-6">
-            <div className="text-center max-w-2xl">
+            <div className={`text-center max-w-2xl transition-all duration-1000 ease-out ${
+              heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}>
               <h1 className="text-5xl md:text-6xl text-brand-yellow font-script">
                 Hotel at Home
               </h1>
-              <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-light/80">
+              <p className={`mx-auto mt-6 max-w-xl text-lg leading-8 text-white/90 transition-all duration-1000 ease-out delay-200 ${
+                heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}>
                 Your Mediterranean escape in Amadeo, Cavite.
               </p>
-              <div className="mt-10 flex justify-center">
+              <div className={`mt-10 flex justify-center transition-all duration-1000 ease-out delay-400 ${
+                heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}>
                 <Link
                   href="/rooms"
-                  className="inline-flex items-center gap-2 rounded-full bg-accent px-7 py-3 text-sm font-semibold text-brand-blue transition-all duration-200 ease-smooth hover:bg-accent-500 hover:shadow-glow hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full bg-accent px-7 py-3 text-sm font-semibold text-brand-blue transition-all duration-300 ease-out hover:bg-accent-500 hover:shadow-[0_0_20px_rgba(249,205,42,0.4)] hover:-translate-y-0.5 hover:scale-105"
                 >
                   Explore Our Rooms
-                  <span aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-1">→</span>
+                  <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                 </Link>
               </div>
             </div>
@@ -97,7 +110,9 @@ export default function Home() {
       {/* Floating check availability form */}
       <section className="relative -mt-10 px-6 pb-20 z-10">
         <div className="mx-auto max-w-7xl">
-          <div className="overflow-hidden rounded-[40px] bg-brand-white px-8 py-10 shadow-soft backdrop-blur-sm">
+          <div className={`overflow-hidden rounded-[40px] bg-brand-white px-8 py-10 shadow-lg shadow-brand-blue/10 backdrop-blur-sm transition-all duration-1000 ease-out ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
               <div className="mb-8 text-center">
                 <h2 className="text-4xl font-script text-brand-blue">Check Availability</h2>
               </div>
@@ -186,29 +201,31 @@ export default function Home() {
 
       {/* Functional elements below availability container */}
       <section className="px-6 pb-20">
-        <div className="mx-auto max-w-7xl space-y-12">
-          <div className="text-center">
-            <p className="text-5xl font-script text-primary-900">Our Rooms</p>
+        <div className="mx-auto max-w-7xl space-y-20">
+          <div className={`text-center transition-all duration-1000 ease-out ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
+            <p className="text-5xl font-script text-brand-blue">Our Rooms</p>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-2">
-            <article className="overflow-hidden rounded-[32px] border border-primary-100 bg-brand-white shadow-card transition-all duration-300 ease-smooth hover:shadow-xl hover:-translate-y-1">
-              <div className="h-80 w-full overflow-hidden bg-slate-100 relative">
-                <Image src="/img/blue-room/blue11.jpg" alt="Luxury Accommodations" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" priority />
+            <article className="group overflow-hidden rounded-[32px] border border-brand-blue/10 bg-brand-white shadow-sm transition-all duration-700 ease-out hover:shadow-xl hover:-translate-y-1">
+              <div className="h-80 w-full overflow-hidden relative">
+                <Image src="/img/blue-room/blue11.jpg" alt="Luxury Accommodations" fill className="object-cover transition-transform duration-700 ease-out group-hover:scale-110" sizes="(max-width: 1024px) 100vw, 50vw" priority />
               </div>
               <div className="p-8">
-                <h3 className="text-2xl font-semibold text-primary-900">Luxury Accommodations</h3>
-                <p className="mt-4 text-primary-600">
+                <h3 className="text-2xl font-semibold text-brand-blue">Luxury Accommodations</h3>
+                <p className="mt-4 text-brand-blue/70">
                   Explore our Gold Room and Blue Room, each designed with Mediterranean elegance and modern comfort.
                 </p>
-                <Link href="/rooms" className="mt-8 inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-brand-blue transition-all duration-200 ease-smooth hover:bg-accent-500 hover:shadow-glow hover:-translate-y-0.5">
+                <Link href="/rooms" className="mt-8 inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-brand-blue transition-all duration-300 ease-out hover:bg-accent-500 hover:shadow-[0_0_20px_rgba(249,205,42,0.4)] hover:-translate-y-0.5 hover:scale-105">
                   View All Rooms
                 </Link>
               </div>
             </article>
 
-            <article className="overflow-hidden rounded-[32px] border border-primary-100 bg-brand-white shadow-card transition-all duration-300 ease-smooth hover:shadow-xl hover:-translate-y-1">
-              <div className="h-80 w-full overflow-hidden bg-slate-200">
+            <article className="group overflow-hidden rounded-[32px] border border-brand-blue/10 bg-brand-white shadow-sm transition-all duration-700 ease-out hover:shadow-xl hover:-translate-y-1">
+              <div className="h-80 w-full overflow-hidden relative">
                 <iframe
                   title="Amadeo Location"
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30953.230703290206!2d120.89868907910157!3d14.127048999999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd790064203323%3A0x3043972d3b983203!2sHotel%20%40%20Home!5e0!3m2!1sen!2sph!4v1777886601332!5m2!1sen!2sph"
@@ -219,8 +236,8 @@ export default function Home() {
                 />
               </div>
               <div className="p-8">
-                <h3 className="text-2xl font-semibold text-primary-900">Our Location</h3>
-                <p className="mt-4 text-primary-600">
+                <h3 className="text-2xl font-semibold text-brand-blue">Our Location</h3>
+                <p className="mt-4 text-brand-blue/70">
                   Located in Amadeo, Cavite, Hotel at Home is close to dining and scenic leisure spots.
                 </p>
                 <div className="mt-6 flex items-center gap-3 text-sm text-brand-blue/70">
@@ -229,7 +246,7 @@ export default function Home() {
                       <path fillRule="evenodd" d="M12 2C8.1 2 5 5.1 5 9c0 4.9 5.1 11.4 6.3 12.9.4.4 1 .4 1.4 0C13.9 20.4 19 13.9 19 9c0-3.9-3.1-7-7-7zm0 9.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 6.5 12 6.5s2.5 1.1 2.5 2.5S13.4 11.5 12 11.5z" clipRule="evenodd" />
                     </svg>
                   </span>
-                <a href="https://maps.app.goo.gl/msZvzjPS2H6DsXP68?g_st=ic" target="_blank" rel="noopener noreferrer" className="hover:underline transition-colors duration-200 hover:text-primary-900">
+                <a href="https://maps.app.goo.gl/msZvzjPS2H6DsXP68?g_st=ic" target="_blank" rel="noopener noreferrer" className="hover:underline transition-colors duration-200 hover:text-brand-blue">
                   Salaban, Tagaytay-Amadeo Road, Amadeo, Cavite
                 </a>
                 </div>
@@ -237,11 +254,13 @@ export default function Home() {
             </article>
           </div>
 
-          <section className="px-6 pb-20">
+          <section>
             <div className="mx-auto max-w-7xl">
-              <div className="text-center">
-                <p className="text-5xl font-script text-primary-900">Nearby Attractions</p>
-                <p className="mx-auto mt-4 max-w-2xl text-sm text-primary-600">
+              <div className={`text-center transition-all duration-1000 ease-out ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}>
+                <p className="text-5xl font-script text-brand-blue">Nearby Attractions</p>
+                <p className="mx-auto mt-4 max-w-2xl text-sm text-brand-blue/70">
                   Discover the best of Cavite and Tagaytay, all within easy reach of Hotel at Home.
                 </p>
               </div>
@@ -284,15 +303,79 @@ export default function Home() {
                     description: 'A contemporary art museum showcasing stunning glass sculptures by renowned artist Ramon Orlina.',
                     image: '/nearby/museo-orlina.jpg'
                   }
-                ].map((item) => (
-                  <article key={item.title} className="overflow-hidden rounded-[28px] border border-primary-100 bg-brand-white shadow-card transition-all duration-300 ease-smooth hover:shadow-lg hover:-translate-y-0.5">
+                ].map((item, index) => (
+                  <article key={item.title} className={`group overflow-hidden rounded-[32px] border border-brand-blue/10 bg-brand-white shadow-sm transition-all duration-700 ease-out hover:shadow-lg hover:shadow-brand-blue/10 hover:-translate-y-1 ${
+                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                  }`} style={{ transitionDelay: `${(index + 1) * 100}ms` }}>
                     <div className="h-56 overflow-hidden relative">
-                      <Image src={item.image} alt={item.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" loading="lazy" />
+                      <Image src={item.image} alt={item.title} fill className="object-cover transition-transform duration-700 ease-out group-hover:scale-110" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" loading="lazy" />
                     </div>
                     <div className="p-6">
-                      <h3 className="text-xl font-semibold text-primary-900">{item.title}</h3>
-                      <p className="mt-2 text-sm uppercase tracking-[0.24em] text-accent-600 font-semibold">{item.distance}</p>
-                      <p className="mt-4 text-sm leading-6 text-primary-600">{item.description}</p>
+                      <h3 className="text-xl font-semibold text-brand-blue">{item.title}</h3>
+                      <p className="mt-2 text-sm uppercase tracking-[0.24em] text-accent font-semibold">{item.distance}</p>
+                      <p className="mt-4 text-sm leading-6 text-brand-blue/70">{item.description}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Golf Courses Section */}
+          <section>
+            <div className="mx-auto max-w-7xl">
+              <div className={`text-center transition-all duration-1000 ease-out ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}>
+                <p className="text-5xl font-script text-brand-blue">Golf Courses Nearby</p>
+                <p className="mx-auto mt-4 max-w-2xl text-sm text-brand-blue/70">
+                  World-class golfing destinations just minutes away from Hotel at Home.
+                </p>
+              </div>
+
+              <div className="mt-12 grid gap-8 md:grid-cols-2">
+                {[
+                  {
+                    name: 'Splendido Taal Residential Golf & Country Club',
+                    distance: '15 minutes',
+                    description: 'A premier golf course with stunning views of Taal Volcano. Features an 18-hole championship course designed by Greg Norman.',
+                    image: '/img/golf/splendido taal/Splendido-Cover.jpg',
+                    features: ['18-hole championship course', 'Taal Volcano views', 'Pro shop & restaurant', 'Clubhouse amenities']
+                  },
+                  {
+                    name: 'The Riviera Golf Club',
+                    distance: '25 minutes',
+                    description: 'One of the oldest and most prestigious golf clubs in the country. Known for its challenging layout and well-maintained fairways.',
+                    image: '/img/golf/riviera golf club/483524039_1200902715376996_4277393929211517284_n.jpg',
+                    features: ['18-hole course', 'Historic club', 'Championship layout', 'Practice facilities']
+                  }
+                ].map((course, index) => (
+                  <article key={course.name} className={`group overflow-hidden rounded-[32px] border border-brand-blue/10 bg-brand-white shadow-sm transition-all duration-700 ease-out hover:shadow-xl hover:shadow-brand-blue/10 hover:-translate-y-2 ${
+                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                  }`} style={{ transitionDelay: `${(index + 1) * 150}ms` }}>
+                    <div className="h-64 overflow-hidden relative">
+                      <Image src={course.image} alt={course.name} fill className="object-cover transition-transform duration-700 ease-out group-hover:scale-110" sizes="(max-width: 768px) 100vw, 50vw" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/60 to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <div className="flex items-center gap-2 text-white/90 text-sm">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          {course.distance} from Hotel at Home
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-semibold text-brand-blue">{course.name}</h3>
+                      <p className="mt-4 text-sm leading-7 text-brand-blue/70">{course.description}</p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {course.features.map((feature) => (
+                          <span key={feature} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-accent/10 text-brand-blue/80">
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </article>
                 ))}

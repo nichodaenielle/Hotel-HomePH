@@ -10,9 +10,13 @@ const app = express();
 // Trust proxy is useful for environments behind reverse proxies (like Hostinger/Railway)
 app.set('trust proxy', 1);
 
-// Redirect HTTP to HTTPS in production
+// Redirect HTTP to HTTPS in production (skip for local development)
 app.use((req, res, next) => {
-  if (req.headers['x-forwarded-proto'] === 'http' || !req.secure) {
+  const host = req.headers.host || '';
+  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+  
+  // Only redirect in production (not localhost)
+  if (!isLocalhost && (req.headers['x-forwarded-proto'] === 'http' || !req.secure)) {
     return res.redirect(301, 'https://' + req.headers.host + req.url);
   }
   next();
