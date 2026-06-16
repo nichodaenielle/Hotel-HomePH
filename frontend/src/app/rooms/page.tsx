@@ -5,9 +5,26 @@ import { useState, useEffect } from 'react';
 
 export default function RoomsPage() {
   const [isVisible, setIsVisible] = useState(false);
+  const [rooms, setRooms] = useState<any[]>([]);
 
   useEffect(() => {
     setIsVisible(true);
+  }, []);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const response = await fetch(`${apiUrl}/api/rooms`);
+        if (response.ok) {
+          const data = await response.json();
+          setRooms(data);
+        }
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+      }
+    };
+    fetchRooms();
   }, []);
 
   return (
@@ -41,12 +58,12 @@ export default function RoomsPage() {
 
       <section className="px-6 pb-20">
         <div className="mx-auto max-w-7xl grid gap-8 lg:grid-cols-2">
-          <GoldRoomCard delay={0} />
-          <BlueRoomCard delay={100} />
+          <GoldRoomCard delay={0} room={rooms.find(r => r.id === 1)} />
+          <BlueRoomCard delay={100} room={rooms.find(r => r.id === 2)} />
         </div>
 
         <div className="mx-auto mt-10 max-w-7xl grid gap-8 lg:grid-cols-2">
-          <RooftopCard delay={200} />
+          <RooftopCard delay={200} room={rooms.find(r => r.id === 3)} />
           <ReceptionCard delay={300} />
         </div>
 
@@ -95,7 +112,7 @@ export default function RoomsPage() {
   );
 }
 
-function GoldRoomCard({ delay = 0 }: { delay?: number }) {
+function GoldRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const totalImages = 15;
@@ -107,6 +124,9 @@ function GoldRoomCard({ delay = 0 }: { delay?: number }) {
   const handleNext = () => {
     setCurrentIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
   };
+
+  const price = room?.price || 4800;
+  const weekendPrice = room?.weekend_price || 5300;
 
   return (
     <article 
@@ -157,7 +177,7 @@ function GoldRoomCard({ delay = 0 }: { delay?: number }) {
       </div>
       <div className="space-y-6 p-8">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60">₱4,800/night (Weekdays) • ₱5,300 (Weekends)</p>
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60">₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/night (Weekdays) • ₱{weekendPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Weekends)</p>
         </div>
         <div className="grid gap-2 text-sm text-brand-blue/70 sm:grid-cols-2">
           <div className="space-y-2">
@@ -193,7 +213,7 @@ function GoldRoomCard({ delay = 0 }: { delay?: number }) {
   );
 }
 
-function BlueRoomCard({ delay = 0 }: { delay?: number }) {
+function BlueRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
   const [currentIndex, setCurrentIndex] = useState(2);
   const [isHovered, setIsHovered] = useState(false);
   const totalImages = 13;
@@ -205,6 +225,9 @@ function BlueRoomCard({ delay = 0 }: { delay?: number }) {
   const handleNext = () => {
     setCurrentIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
   };
+
+  const price = room?.price || 4800;
+  const weekendPrice = room?.weekend_price || 5300;
 
   return (
     <article 
@@ -254,7 +277,7 @@ function BlueRoomCard({ delay = 0 }: { delay?: number }) {
       </div>
       <div className="space-y-6 p-8">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60">₱4,800/night (Weekdays) • ₱5,300 (Weekends)</p>
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60">₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/night (Weekdays) • ₱{weekendPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Weekends)</p>
         </div>
         <div className="grid gap-2 text-sm text-brand-blue/70 sm:grid-cols-2">
           <div className="space-y-2">
@@ -290,7 +313,7 @@ function BlueRoomCard({ delay = 0 }: { delay?: number }) {
   );
 }
 
-function RooftopCard({ delay = 0 }: { delay?: number }) {
+function RooftopCard({ delay = 0, room }: { delay?: number; room?: any }) {
   const [currentIndex, setCurrentIndex] = useState(4);
   const [isHovered, setIsHovered] = useState(false);
   const totalImages = 13;
@@ -302,6 +325,11 @@ function RooftopCard({ delay = 0 }: { delay?: number }) {
   const handleNext = () => {
     setCurrentIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
   };
+
+  const price = room?.price || 8000;
+  const weekendPrice = room?.weekend_price || 10000;
+  const price6hr = room?.price_6hr || 4000;
+  const weekendPrice6hr = room?.weekend_price_6hr || 5000;
 
   return (
     <article 
@@ -355,12 +383,12 @@ function RooftopCard({ delay = 0 }: { delay?: number }) {
           <div className="mt-3 space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50">Pricing</p>
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-              <span className="text-brand-blue"><span className="font-bold">₱4,000</span> / 6 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
-              <span className="text-brand-blue"><span className="font-bold">₱5,000</span> / 6 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
+              <span className="text-brand-blue"><span className="font-bold">₱{price6hr.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 6 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
+              <span className="text-brand-blue"><span className="font-bold">₱{weekendPrice6hr.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 6 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-              <span className="text-brand-blue"><span className="font-bold">₱8,000</span> / 12 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
-              <span className="text-brand-blue"><span className="font-bold">₱10,000</span> / 12 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
+              <span className="text-brand-blue"><span className="font-bold">₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 12 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
+              <span className="text-brand-blue"><span className="font-bold">₱{weekendPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 12 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
             </div>
           </div>
         </div>
