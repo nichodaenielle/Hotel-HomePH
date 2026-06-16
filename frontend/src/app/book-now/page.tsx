@@ -765,13 +765,15 @@ function BookNowContent() {
                         setSelectedRoomId(room.id);
                         if (guests > room.capacity) setGuests(room.capacity);
                         if (room.id !== 3) setTimeSlot('');
-                        // Reset dates when switching rooms to avoid showing stale availability errors
-                        setCheckIn(null);
-                        setCheckOut(null);
-                        // Reset date availability states when changing rooms
-                        setDatesAvailable(false);
-                        setAvailabilityError(null);
-                        setConflictingDates(null);
+                        // Only reset dates when switching to a different room
+                        if (selectedRoomId !== room.id) {
+                          setCheckIn(null);
+                          setCheckOut(null);
+                          // Reset date availability states when changing rooms
+                          setDatesAvailable(false);
+                          setAvailabilityError(null);
+                          setConflictingDates(null);
+                        }
                       }}
                       className={`cursor-pointer overflow-hidden rounded-2xl border-2 transition-all duration-200 ${
                         selectedRoomId === room.id
