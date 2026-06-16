@@ -3358,7 +3358,7 @@ header("Pragma: no-cache");
             const requestBody = { price, weekendPrice };
             if (roomId === 3) {
                 requestBody.price6hr = price6hr;
-                requestBody.weekendPrice6hr = weekendPrice6hr;
+                requestBody.weekendPrice6Hour = weekendPrice6hr;
             }
 
             try {
@@ -3366,7 +3366,7 @@ header("Pragma: no-cache");
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': ADMIN_PASSWORD
+                        'x-api-key': currentApiKey
                     },
                     body: JSON.stringify(requestBody)
                 });
