@@ -3315,7 +3315,7 @@ header("Pragma: no-cache");
         // Pricing Management Functions
         async function loadPricingData() {
             try {
-                const response = await fetch(`${API_BASE}/api/rooms`);
+                const response = await fetch(`${API_BASE_URL}/api/rooms`);
                 if (response.ok) {
                     const rooms = await response.json();
                     rooms.forEach(room => {
@@ -3362,7 +3362,7 @@ header("Pragma: no-cache");
             }
 
             try {
-                const response = await fetch(`${API_BASE}/api/admin/rooms/${roomId}/pricing`, {
+                const response = await fetch(`${API_BASE_URL}/api/admin/rooms/${roomId}/pricing`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
