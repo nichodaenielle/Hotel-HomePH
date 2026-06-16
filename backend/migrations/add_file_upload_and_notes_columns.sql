@@ -1,18 +1,114 @@
 -- Migration: Add file upload and notes columns to bookings table
 -- Date: June 7, 2026
 -- Purpose: Support Priority 1 - Booking Details View with file viewing
+-- Compatible with older MySQL versions
 
 -- Add new columns for file uploads and booking details
-ALTER TABLE bookings
-ADD COLUMN payment_proof_url VARCHAR(255) DEFAULT NULL,
-ADD COLUMN id_document_url VARCHAR(255) DEFAULT NULL,
-ADD COLUMN booking_purpose TEXT DEFAULT NULL,
-ADD COLUMN admin_notes TEXT DEFAULT NULL,
-ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+SET @column_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+  AND table_name = 'bookings'
+  AND column_name = 'payment_proof_url'
+);
+SET @sql = IF(@column_exists = 0,
+  'ALTER TABLE bookings ADD COLUMN payment_proof_url VARCHAR(255) DEFAULT NULL',
+  'SELECT ''Column payment_proof_url already exists'' AS message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+  AND table_name = 'bookings'
+  AND column_name = 'id_document_url'
+);
+SET @sql = IF(@column_exists = 0,
+  'ALTER TABLE bookings ADD COLUMN id_document_url VARCHAR(255) DEFAULT NULL',
+  'SELECT ''Column id_document_url already exists'' AS message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+  AND table_name = 'bookings'
+  AND column_name = 'booking_purpose'
+);
+SET @sql = IF(@column_exists = 0,
+  'ALTER TABLE bookings ADD COLUMN booking_purpose TEXT DEFAULT NULL',
+  'SELECT ''Column booking_purpose already exists'' AS message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+  AND table_name = 'bookings'
+  AND column_name = 'admin_notes'
+);
+SET @sql = IF(@column_exists = 0,
+  'ALTER TABLE bookings ADD COLUMN admin_notes TEXT DEFAULT NULL',
+  'SELECT ''Column admin_notes already exists'' AS message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+  AND table_name = 'bookings'
+  AND column_name = 'updated_at'
+);
+SET @sql = IF(@column_exists = 0,
+  'ALTER TABLE bookings ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
+  'SELECT ''Column updated_at already exists'' AS message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- Add index for faster lookups on file URLs
-CREATE INDEX idx_payment_proof ON bookings(payment_proof_url);
-CREATE INDEX idx_id_document ON bookings(id_document_url);
+SET @index_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+  AND table_name = 'bookings'
+  AND index_name = 'idx_payment_proof'
+);
+SET @sql = IF(@index_exists = 0,
+  'CREATE INDEX idx_payment_proof ON bookings(payment_proof_url)',
+  'SELECT ''Index idx_payment_proof already exists'' AS message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+  AND table_name = 'bookings'
+  AND index_name = 'idx_id_document'
+);
+SET @sql = IF(@index_exists = 0,
+  'CREATE INDEX idx_id_document ON bookings(id_document_url)',
+  'SELECT ''Index idx_id_document already exists'' AS message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- Create booking_history table for audit trail
 CREATE TABLE IF NOT EXISTS booking_history (
@@ -28,8 +124,3 @@ CREATE TABLE IF NOT EXISTS booking_history (
   INDEX idx_booking_id (booking_id),
   INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Add sample history entries for existing bookings (optional, for testing)
--- INSERT INTO booking_history (booking_id, action, old_status, new_status, performed_by, notes)
--- SELECT id, 'created', NULL, status, 'system', 'Booking created'
--- FROM bookings;

@@ -37,6 +37,25 @@ const formatDate = (date: Date) => {
 
 const getStartOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
+// Convert "hh:mm AM/PM" to 24-hour "HH:MM".
+const to24h = (label: string): string => {
+  const m = label.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!m) return '';
+  let hh = parseInt(m[1], 10) % 12;
+  if (/pm/i.test(m[3])) hh += 12;
+  return `${String(hh).padStart(2, '0')}:${m[2]}`;
+};
+
+// Parse a Rooftop slot string like "06:00 PM - 12:00 AM" into start/end times.
+const parseSlotTimes = (slot: string): { checkInTime: string; checkOutTime: string } | null => {
+  if (!slot) return null;
+  const [start, end] = slot.split('-').map(s => s.trim());
+  const checkInTime = to24h(start);
+  const checkOutTime = to24h(end);
+  if (!checkInTime || !checkOutTime) return null;
+  return { checkInTime, checkOutTime };
+};
+
 const addDays = (date: Date, days: number) => {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
@@ -49,13 +68,13 @@ function SmartCalendar({
   checkIn,
   checkOut,
   onChange,
-  blockedDates = [],
+  dateStatuses = {},
   isSingleDaySelection = false,
 }: {
   checkIn: Date | null;
   checkOut: Date | null;
   onChange: (inDate: Date | null, outDate: Date | null) => void;
-  blockedDates?: string[];
+  dateStatuses?: Record<string, any[]>;
   isSingleDaySelection?: boolean;
 }) {
   const [currentMonth, setCurrentMonth] = useState(getStartOfDay(new Date()));
@@ -75,8 +94,12 @@ function SmartCalendar({
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
+  const getDateBookings = (date: Date) => {
+    return dateStatuses[formatDate(date)] || [];
+  };
+
   const isBlocked = (date: Date) => {
-    return blockedDates.includes(formatDate(date));
+    return getDateBookings(date).length > 0;
   };
 
   const isValidRange = (start: Date, end: Date) => {
@@ -132,8 +155,9 @@ function SmartCalendar({
       const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
       const dateStr = formatDate(date);
       const isPastOrBuffer = date < minDate;
-      const isNightBooked = blockedDates.includes(dateStr);
-      
+      const bookings = getDateBookings(date);
+      const isNightBooked = bookings.length > 0;
+
       let isDisabled = isPastOrBuffer || isNightBooked;
       if (!isSingleDaySelection && checkIn && !checkOut && date > checkIn) {
         isDisabled = !isValidRange(checkIn, date);
@@ -144,16 +168,31 @@ function SmartCalendar({
       const isInRange = !isSingleDaySelection && checkIn && checkOut && date > checkIn && date < checkOut;
 
       let baseClasses = "relative flex h-10 w-10 items-center justify-center rounded-full text-sm transition ";
-      
+
       if (isDisabled) {
         baseClasses += "cursor-not-allowed text-gray-300 ";
-        if (isNightBooked) baseClasses += "line-through decoration-red-400/50 ";
+        if (isNightBooked) {
+          baseClasses += "line-through decoration-red-400/50 ";
+        }
       } else if (isCheckIn || isCheckOut) {
         baseClasses += "bg-brand-blue text-white font-semibold shadow-md ";
       } else if (isInRange) {
         baseClasses += "bg-brand-blue/10 text-brand-blue font-medium rounded-none ";
       } else {
         baseClasses += "text-brand-blue hover:bg-brand-blue/5 cursor-pointer ";
+      }
+
+      // Build tooltip with booking details
+      let tooltipText = "";
+      if (isNightBooked && !isPastOrBuffer) {
+        const bookingDetails = bookings.map(b => {
+          const checkInTime = new Date(b.checkIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          const checkOutTime = new Date(b.checkOut).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          const roomName = b.roomId === 1 ? 'Gold Room' : b.roomId === 2 ? 'Blue Room' : 'Rooftop';
+          const blockReason = b.isRooftopBlock ? '(Rooftop blocks all)' : '';
+          return `${roomName} ${b.status} ${checkInTime}-${checkOutTime} ${blockReason}`;
+        }).join('\n');
+        tooltipText = bookingDetails;
       }
 
       days.push(
@@ -163,10 +202,10 @@ function SmartCalendar({
             onClick={() => handleDateClick(date)}
             disabled={isDisabled}
             className={baseClasses}
-        title={isNightBooked ? "Fully Booked/Holiday" : ""}
+            title={tooltipText}
           >
             {i}
-        {isNightBooked && !isPastOrBuffer && (
+            {isNightBooked && !isPastOrBuffer && (
                <span className="absolute bottom-1 h-1 w-1 rounded-full bg-red-400"></span>
             )}
           </button>
@@ -282,14 +321,21 @@ function BookNowContent() {
   
   // State
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(
-    searchParams.get('roomId') ? parseInt(searchParams.get('roomId') as string) : null
-  );
+  const initialRoomId = searchParams.get('roomId') ? parseInt(searchParams.get('roomId') as string) : null;
+  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(initialRoomId);
   const [checkIn, setCheckIn] = useState<Date | null>(
-    searchParams.get('checkIn') ? new Date(searchParams.get('checkIn') as string) : null
+    // For Rooftop, only check-in is needed (single-day booking)
+    // For Gold/Blue, both dates are needed (multi-night booking)
+    initialRoomId === 3
+      ? (searchParams.get('checkIn') ? new Date(searchParams.get('checkIn') as string) : null)
+      : (searchParams.get('checkIn') ? new Date(searchParams.get('checkIn') as string) : null)
   );
   const [checkOut, setCheckOut] = useState<Date | null>(
-    searchParams.get('checkOut') ? new Date(searchParams.get('checkOut') as string) : null
+    // For Rooftop, check-out is not needed (single-day booking)
+    // For Gold/Blue, check-out is needed (multi-night booking)
+    initialRoomId === 3
+      ? null
+      : (searchParams.get('checkOut') ? new Date(searchParams.get('checkOut') as string) : null)
   );
   const [purpose, setPurpose] = useState('');
   const [guests, setGuests] = useState(
@@ -300,14 +346,108 @@ function BookNowContent() {
   const [timeSlot, setTimeSlot] = useState('');
   const [duration, setDuration] = useState<'6' | '12'>('12'); // 6-hour or 12-hour booking
   const [isCheckingDates, setIsCheckingDates] = useState(false);
-  const [datesAvailable, setDatesAvailable] = useState(!!(searchParams.get('checkIn') && searchParams.get('checkOut')));
+  const [datesAvailable, setDatesAvailable] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [conflictingDates, setConflictingDates] = useState<any[] | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState('');
   const [agreedToRules, setAgreedToRules] = useState(false);
   const [viewRoomDetails, setViewRoomDetails] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  const [dateStatuses, setDateStatuses] = useState<Record<string, any[]>>({});
   const [viewQrFullscreen, setViewQrFullscreen] = useState(false);
+
+  // Check availability when room changes and dates are already selected
+  useEffect(() => {
+    const checkAvailabilityForRoom = async () => {
+      if (checkIn && checkOut && selectedRoomId) {
+        // For Rooftop, require time slot to be selected before checking availability
+        if (selectedRoomId === 3 && !timeSlot) {
+          setDatesAvailable(false);
+          setAvailabilityError(null);
+          setConflictingDates(null);
+          return;
+        }
+
+        setIsCheckingDates(true);
+        setDatesAvailable(false);
+        setAvailabilityError(null);
+        setConflictingDates(null);
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+          const slotTimes = selectedRoomId === 3 ? parseSlotTimes(timeSlot) : null;
+          const res = await fetch(`${apiUrl}/api/availability`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              roomId: selectedRoomId,
+              checkIn: formatDate(checkIn),
+              checkOut: formatDate(checkOut),
+              checkInTime: slotTimes?.checkInTime,
+              checkOutTime: slotTimes?.checkOutTime
+            })
+          });
+          const data = await res.json();
+          setDatesAvailable(data.available);
+          if (!data.available) {
+            const errorMsg = data.error || 'Selected dates are no longer available.';
+            setAvailabilityError(errorMsg);
+            setConflictingDates(data.conflicts || null);
+          }
+        } catch (e) {
+          console.error('Availability check failed:', e);
+          setDatesAvailable(false);
+          setAvailabilityError('Could not check availability. Please try again.');
+        } finally {
+          setIsCheckingDates(false);
+        }
+      }
+    };
+
+    checkAvailabilityForRoom();
+  }, [selectedRoomId, timeSlot]);
+
+  // Check availability on mount if dates are pre-populated from URL
+  useEffect(() => {
+    if (checkIn && checkOut && selectedRoomId) {
+      const checkInitialAvailability = async () => {
+        setIsCheckingDates(true);
+        setDatesAvailable(false);
+        setAvailabilityError(null);
+        setConflictingDates(null);
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+          const slotTimes = selectedRoomId === 3 ? parseSlotTimes(timeSlot) : null;
+          const res = await fetch(`${apiUrl}/api/availability`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              roomId: selectedRoomId,
+              checkIn: formatDate(checkIn),
+              checkOut: formatDate(checkOut),
+              checkInTime: slotTimes?.checkInTime,
+              checkOutTime: slotTimes?.checkOutTime
+            })
+          });
+          const data = await res.json();
+          setDatesAvailable(data.available);
+          if (!data.available) {
+            const errorMsg = data.error || 'Selected dates are no longer available.';
+            setAvailabilityError(errorMsg);
+            setConflictingDates(data.conflicts || null);
+          }
+        } catch (e) {
+          console.error('Availability check failed:', e);
+          setDatesAvailable(false);
+          setAvailabilityError('Could not check availability. Please try again.');
+        } finally {
+          setIsCheckingDates(false);
+        }
+      };
+
+      checkInitialAvailability();
+    }
+  }, []);
 
   // Calculate derived values
   const selectedRoom = mockRooms.find(r => r.id === selectedRoomId);
@@ -326,7 +466,7 @@ function BookNowContent() {
   // Fetch blocked dates when selected room changes
   useEffect(() => {
     if (!selectedRoomId) {
-      setBlockedDates([]);
+      setDateStatuses({});
       return;
     }
     const fetchBlockedDates = async () => {
@@ -335,32 +475,16 @@ function BookNowContent() {
         const response = await fetch(`${apiUrl}/api/bookings/dates/${selectedRoomId}`);
         if (response.ok) {
           const data = await response.json();
-          const dates: string[] = [];
-          data.forEach((booking: any) => {
-            // Split bypasses timezone shifts entirely by taking the exact YYYY-MM-DD
-            const checkInStr = String(booking.check_in).split('T')[0];
-            const checkOutStr = String(booking.check_out).split('T')[0];
-            
-            const [inY, inM, inD] = checkInStr.split('-');
-            let current = new Date(parseInt(inY), parseInt(inM) - 1, parseInt(inD));
-            
-            const [outY, outM, outD] = checkOutStr.split('-');
-            const end = new Date(parseInt(outY), parseInt(outM) - 1, parseInt(outD));
-            
-            while (current < end) {
-              dates.push(formatDate(current));
-              current.setDate(current.getDate() + 1);
-            }
-          });
-          setBlockedDates(dates);
+          // API now returns { "2026-06-10": "confirmed", "2026-06-11": "pending", ... }
+          setDateStatuses(data);
         }
       } catch (error) {
         console.error('Error fetching dates:', error);
       }
     };
-    
+
     fetchBlockedDates(); // Fetch immediately on room change
-    const intervalId = setInterval(fetchBlockedDates, 1000); // Refresh every 1 second
+    const intervalId = setInterval(fetchBlockedDates, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(intervalId); // Cleanup on unmount or when room changes
   }, [selectedRoomId]);
@@ -428,7 +552,31 @@ function BookNowContent() {
 
           const finalPurpose = selectedRoomId === 3 && timeSlot ? `${purpose}\n\nDuration: ${duration} Hours\nTime Slot: ${timeSlot}` : purpose;
 
+          // Rooftop bookings carry explicit slot times; nightly rooms use the
+          // backend's fixed standard times (14:00 / 12:00).
+          const slotTimes = selectedRoomId === 3 ? parseSlotTimes(timeSlot) : null;
+
           const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+          
+          // Re-check availability before submission to prevent race conditions
+          const availRes = await fetch(`${apiUrl}/api/availability`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              roomId: selectedRoomId,
+              checkIn: formatDate(checkIn!),
+              checkOut: formatDate(checkOut!),
+              checkInTime: slotTimes?.checkInTime,
+              checkOutTime: slotTimes?.checkOutTime
+            })
+          });
+          const availData = await availRes.json();
+          if (!availData.available) {
+            showToast('Selected dates are no longer available. Please choose different dates.', 'error');
+            setDatesAvailable(false);
+            setIsSubmitting(false);
+            return;
+          }
           
           const response = await fetch(`${apiUrl}/api/bookings`, {
             method: 'POST',
@@ -441,6 +589,8 @@ function BookNowContent() {
               guestPhone: guestDetails.phone,
               checkIn: checkIn ? formatDate(checkIn) : null,
               checkOut: checkOut ? formatDate(checkOut) : null,
+              checkInTime: slotTimes?.checkInTime,
+              checkOutTime: slotTimes?.checkOutTime,
               totalPrice: roomTotal,
               purpose: finalPurpose,
               guests: guests,
@@ -475,7 +625,16 @@ function BookNowContent() {
     setCurrentStep(prev => Math.min(prev + 1, 5));
   };
 
-  const handlePrev = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+  const handlePrev = () => {
+    const newStep = Math.max(currentStep - 1, 1);
+    setCurrentStep(newStep);
+    // Reset availability states when going back to Step 1 (room selection)
+    if (newStep === 1) {
+      setDatesAvailable(false);
+      setAvailabilityError(null);
+      setConflictingDates(null);
+    }
+  };
 
   if (bookingConfirmed) {
     return (
@@ -559,16 +718,23 @@ function BookNowContent() {
                 <h2 className="text-2xl font-semibold mb-6">Select Accommodation</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {mockRooms.map(room => (
-                    <div 
+                    <div
                       key={room.id}
                       onClick={() => {
                         setSelectedRoomId(room.id);
                         if (guests > room.capacity) setGuests(room.capacity);
                         if (room.id !== 3) setTimeSlot('');
+                        // Reset dates when switching rooms to avoid showing stale availability errors
+                        setCheckIn(null);
+                        setCheckOut(null);
+                        // Reset date availability states when changing rooms
+                        setDatesAvailable(false);
+                        setAvailabilityError(null);
+                        setConflictingDates(null);
                       }}
                       className={`cursor-pointer overflow-hidden rounded-2xl border-2 transition-all duration-200 ${
-                        selectedRoomId === room.id 
-                          ? 'border-brand-blue shadow-md bg-brand-blue/5' 
+                        selectedRoomId === room.id
+                          ? 'border-brand-blue shadow-md bg-brand-blue/5'
                           : 'border-brand-blue/10 bg-white hover:border-brand-blue/30'
                       }`}
                     >
@@ -587,6 +753,7 @@ function BookNowContent() {
                       <div className="p-4">
                         <h3 className="font-semibold">{room.name}</h3>
                         <p className="text-sm text-brand-blue/60 mt-1">Up to {room.capacity} guests</p>
+                        <p className="text-xs text-brand-blue/50 mt-1">{room.features[0]}</p>
                         {room.price !== null ? (
                           <p className="font-bold text-sm mt-3 uppercase tracking-wider text-accent">From ₱{room.price.toLocaleString()} / {room.id === 3 ? '12-hrs' : 'night'}</p>
                         ) : (
@@ -619,28 +786,72 @@ function BookNowContent() {
                 <div>
                   <h2 className="text-2xl font-semibold">Choose Your Dates</h2>
                   <p className="text-sm text-brand-blue/60 mt-1">Select your check-in and check-out dates. Earliest check-in starts 3 days from today.</p>
+                  <div className="mt-3 flex items-center gap-4 text-xs text-brand-blue/60">
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-red-400"></span>
+                      <span>Booked (hover for details)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-brand-blue"></span>
+                      <span>Selected</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-brand-blue/10"></span>
+                      <span>In range</span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex flex-col md:flex-row gap-8 items-start">
                   <div className="flex-shrink-0 w-full md:w-auto">
-                    <SmartCalendar 
-                      checkIn={checkIn} 
-                      checkOut={checkOut} 
-                      blockedDates={blockedDates}
+                    <SmartCalendar
+                      checkIn={checkIn}
+                      checkOut={checkOut}
+                      dateStatuses={dateStatuses}
                       isSingleDaySelection={selectedRoomId === 3}
-                      onChange={(inD, outD) => {
-                        setCheckIn(inD); 
-                        setCheckOut(outD); 
+                      onChange={async (inD, outD) => {
+                        setCheckIn(inD);
+                        setCheckOut(outD);
                         if (selectedRoomId === 3) setTimeSlot('');
                         if (inD && outD) {
                           setIsCheckingDates(true);
                           setDatesAvailable(false);
-                          setTimeout(() => {
+                          setAvailabilityError(null);
+                          setConflictingDates(null);
+                          try {
+                            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+                            const slotTimes = selectedRoomId === 3 ? parseSlotTimes(timeSlot) : null;
+                            const res = await fetch(`${apiUrl}/api/availability`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                roomId: selectedRoomId,
+                                checkIn: formatDate(inD),
+                                checkOut: formatDate(outD),
+                                checkInTime: slotTimes?.checkInTime,
+                                checkOutTime: slotTimes?.checkOutTime
+                              })
+                            });
+                            const data = await res.json();
+                            setDatesAvailable(data.available);
+                            if (!data.available) {
+                              const errorMsg = data.error || 'Selected dates are no longer available.';
+                              setAvailabilityError(errorMsg);
+                              setConflictingDates(data.conflicts || null);
+                              showToast(errorMsg, 'error');
+                            }
+                          } catch (e) {
+                            console.error('Availability check failed:', e);
+                            setDatesAvailable(false);
+                            setAvailabilityError('Could not check availability. Please try again.');
+                            showToast('Could not check availability. Please try again.', 'error');
+                          } finally {
                             setIsCheckingDates(false);
-                            setDatesAvailable(true);
-                          }, 1500);
+                          }
                         } else {
                           setDatesAvailable(false);
+                          setAvailabilityError(null);
+                          setConflictingDates(null);
                         }
                       }} 
                     />
@@ -652,6 +863,9 @@ function BookNowContent() {
                         <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4">
                           <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-1">Event Date</p>
                           <p className="font-medium">{checkIn ? checkIn.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }) : 'Select date'}</p>
+                          {checkIn && (
+                            <p className="text-xs text-brand-blue/50 mt-2">{checkIn.toLocaleDateString('en-US', { weekday: 'long' })}</p>
+                          )}
                         </div>
                         {checkIn && (
                           <>
@@ -702,7 +916,7 @@ function BookNowContent() {
                                   : ['08:00 AM - 08:00 PM', '10:00 AM - 10:00 PM', '02:00 PM - 02:00 AM']
                                 ).map(slot => {
                                   const isMorningSlot = slot.includes('09:00 AM') || slot.includes('08:00 AM') || slot.includes('10:00 AM');
-                                  const isPrevNightBooked = checkIn ? blockedDates.includes(formatDate(addDays(checkIn, -1))) : false;
+                                  const isPrevNightBooked = checkIn ? !!dateStatuses[formatDate(addDays(checkIn, -1))] : false;
                                   const isDisabled = isPrevNightBooked && isMorningSlot;
 
                                   return (
@@ -724,7 +938,7 @@ function BookNowContent() {
                                   );
                                 })}
                               </div>
-                              {checkIn && blockedDates.includes(formatDate(addDays(checkIn, -1))) && (
+                              {checkIn && !!dateStatuses[formatDate(addDays(checkIn, -1))] && (
                                 <p className="text-xs text-brand-blue/60 mt-3 font-medium flex items-start gap-1.5">
                                   <svg className="w-4 h-4 text-brand-blue/50 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                   Morning slots are unavailable because there are guests checking out at 12:00 PM today.
@@ -740,28 +954,67 @@ function BookNowContent() {
                           <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-1">Check-in</p>
                           <p className="font-medium">{checkIn ? checkIn.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }) : 'Select date'}</p>
                           <p className="text-xs text-brand-blue/60 mt-1">From 2:00 PM</p>
+                          {checkIn && (
+                            <p className="text-xs text-brand-blue/50 mt-2">{checkIn.toLocaleDateString('en-US', { weekday: 'long' })}</p>
+                          )}
                         </div>
                         <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4">
                           <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-1">Check-out</p>
                           <p className="font-medium">{checkOut ? checkOut.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }) : 'Select date'}</p>
                           <p className="text-xs text-brand-blue/60 mt-1">By 12:00 PM</p>
+                          {checkOut && (
+                            <p className="text-xs text-brand-blue/50 mt-2">{checkOut.toLocaleDateString('en-US', { weekday: 'long' })}</p>
+                          )}
                         </div>
+                        {checkIn && checkOut && (
+                          <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-1">Duration</p>
+                            <p className="font-medium">{nights} night{nights > 1 ? 's' : ''}</p>
+                            <p className="text-xs text-brand-blue/60 mt-1">{nights === 1 ? '1 night stay' : `${nights} nights stay`}</p>
+                          </div>
+                        )}
                       </>
                     )}
                   
                     {checkIn && checkOut && (
-                      <div className="mt-2 p-4 rounded-xl border border-brand-blue/10 bg-white flex items-center gap-3 w-fit">
+                      <div className="mt-2 p-4 rounded-xl border border-brand-blue/10 bg-white w-full">
                         {isCheckingDates ? (
-                          <>
+                          <div className="flex items-center gap-3">
                             <svg className="animate-spin h-5 w-5 text-brand-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             <span className="font-medium text-sm text-brand-blue/70">Checking availability for selected dates...</span>
-                          </>
+                          </div>
                         ) : datesAvailable ? (
-                          <>
+                          <div className="flex items-center gap-3">
                             <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                             <span className="font-medium text-sm text-green-600">Dates are available!</span>
-                          </>
-                        ) : null}
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              <span className="font-medium text-sm text-red-600">Selected dates are unavailable</span>
+                            </div>
+                            <div className="pl-8 space-y-1">
+                              <p className="text-xs text-brand-blue/60">
+                                Your selection: {checkIn.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' })} - {checkOut.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' })}
+                              </p>
+                              {conflictingDates && conflictingDates.length > 0 && (
+                                <>
+                                  <p className="text-xs text-red-500/80 font-medium mt-2">Conflicting with:</p>
+                                  {conflictingDates.map((conflict: any, idx: number) => (
+                                    <div key={idx} className="text-xs text-brand-blue/60">
+                                      {new Date(conflict.checkIn).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' })} - {new Date(conflict.checkOut).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' })}
+                                      <span className="text-red-500/70 ml-2">({conflict.status})</span>
+                                    </div>
+                                  ))}
+                                </>
+                              )}
+                              {availabilityError && !conflictingDates && (
+                                <p className="text-xs text-red-500/80 mt-2">{availabilityError}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -772,7 +1025,10 @@ function BookNowContent() {
             {/* STEP 3: Guest Details */}
             {currentStep === 3 && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-semibold">Guest Details</h2>
+                <div>
+                  <h2 className="text-2xl font-semibold">Guest Details</h2>
+                  <p className="text-sm text-brand-blue/60 mt-1">Please provide accurate contact information for booking confirmation.</p>
+                </div>
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-brand-blue/60 mb-2">First Name *</label>
@@ -788,6 +1044,9 @@ function BookNowContent() {
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-brand-blue/60 mb-2">Email Address *</label>
                     <input type="email" value={guestDetails.email} onChange={e => setGuestDetails({...guestDetails, email: e.target.value})} className="w-full rounded-xl border border-brand-blue/10 bg-white px-4 py-3 outline-none focus:border-brand-blue transition" placeholder="juan@example.com" />
+                    {guestDetails.email && !guestDetails.email.includes('@') && (
+                      <p className="text-red-500 text-[10px] mt-1 font-medium">Please enter a valid email address.</p>
+                    )}
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-brand-blue/60 mb-2">Contact Number *</label>
@@ -804,7 +1063,7 @@ function BookNowContent() {
                       placeholder="09123456789" 
                     />
                     {guestDetails.phone && guestDetails.phone.length < 11 && (
-                      <p className="text-red-500 text-[10px] mt-1 font-medium">Must be exactly 11 digits.</p>
+                      <p className="text-red-500 text-[10px] mt-1 font-medium">Must be exactly 11 digits (e.g., 09123456789).</p>
                     )}
                   </div>
                 </div>
@@ -814,9 +1073,12 @@ function BookNowContent() {
             {/* STEP 4: Payment */}
             {currentStep === 4 && (
               <div className="space-y-8">
-                <h2 className="text-2xl font-semibold">
-                  {selectedRoomId === 3 ? 'Event Details & Payment' : 'Payment & Verification'}
-                </h2>
+                <div>
+                  <h2 className="text-2xl font-semibold">
+                    {selectedRoomId === 3 ? 'Event Details & Payment' : 'Payment & Verification'}
+                  </h2>
+                  <p className="text-sm text-brand-blue/60 mt-1">Complete your payment to secure your booking. All payments are verified before confirmation.</p>
+                </div>
                 
                 {selectedRoomId === 3 && (
                   <div className="space-y-4">

@@ -17,7 +17,7 @@ header("Pragma: no-cache");
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
         @font-face {
-            font-family: 'Edwardian Script ITC';
+            font-family: 'ITC Edwardian Script';
             src: url('/fonts/edwardianscriptitc.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
@@ -26,7 +26,7 @@ header("Pragma: no-cache");
         body { font-family: 'DM Sans', sans-serif; background-color: #f3f6fb; color: #011478; margin: 0; padding: clamp(10px, 2vw, 20px); min-height: 100vh; box-sizing: border-box; }
         .container { max-width: 1400px; width: 100%; margin: 0 auto; background: white; border-radius: clamp(16px, 2vw, 32px); box-shadow: 0 4px 20px rgba(1, 20, 120, 0.05); border: 1px solid rgba(1, 20, 120, 0.05); display: flex; flex-direction: column; min-height: calc(100vh - 40px); }
         header { background-color: white; color: #011478; border-bottom: 1px solid rgba(1, 20, 120, 0.05); padding: clamp(12px, 2vw, 20px) clamp(20px, 3vw, 40px); flex-shrink: 0; }
-        header h1 { margin: 0; font-family: 'Edwardian Script ITC', cursive; font-size: clamp(28px, 4vw, 40px); font-weight: normal; line-height: 1.1; }
+        header h1 { margin: 0; font-family: 'ITC Edwardian Script', cursive; font-size: clamp(28px, 4vw, 40px); font-weight: normal; line-height: 1.1; }
         header p { margin: 4px 0 0; color: rgba(1, 20, 120, 0.7); font-size: clamp(13px, 1.5vw, 15px); }
         .content { padding: clamp(15px, 2vw, 20px) clamp(20px, 3vw, 40px); flex: 1; display: flex; flex-direction: column; min-height: 0; }
         .table-container { position: relative; overflow: auto; flex: 1; min-height: min(300px, 40vh); max-height: calc(100vh - 350px); isolation: isolate; }
@@ -478,6 +478,7 @@ header("Pragma: no-cache");
         .bulk-actions-bar span { font-size: 14px; font-weight: 500; }
         .bulk-actions-bar button { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: opacity 0.2s; }
         .bulk-actions-bar button:hover { opacity: 0.9; }
+        .btn-bulk-verify { background: #0ea5e9; color: white; }
         .btn-bulk-confirm { background: #166534; color: white; }
         .btn-bulk-cancel { background: #991b1b; color: white; }
         .btn-bulk-export { background: white; color: #011478; }
@@ -717,6 +718,7 @@ header("Pragma: no-cache");
                 <!-- Bulk Actions Bar -->
                 <div id="bulk-actions-bar" class="bulk-actions-bar">
                     <span id="bulk-count">0 selected</span>
+                    <button class="btn-bulk-verify" onclick="bulkVerify()">Mark Verified</button>
                     <button class="btn-bulk-confirm" onclick="bulkConfirm()">Confirm Selected</button>
                     <button class="btn-bulk-cancel" onclick="bulkCancel()">Cancel Selected</button>
                     <button class="btn-bulk-export" onclick="bulkExport()">Export Selected</button>
@@ -1102,16 +1104,23 @@ header("Pragma: no-cache");
             <p id="modal-desc" class="modal-desc">Enter details.</p>
             <textarea id="modal-reason" class="modal-textarea" placeholder="Type your message here..."></textarea>
             <div id="confirm-fields" style="display: none; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 12px; color: rgba(1,20,120,0.6);">Submitted by guest — read-only</span>
+                    <button id="confirm-lock-btn" type="button" onclick="toggleConfirmLock()"
+                        style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(1,20,120,0.2); background: white; color: #011478; font-family: inherit; font-size: 12px; font-weight: 500; cursor: pointer;">
+                        <span id="confirm-lock-icon">🔒</span><span id="confirm-lock-label">Unlock</span>
+                    </button>
+                </div>
                 <div style="margin-bottom: 15px;">
                     <label class="login-label">Payment Option</label>
-                    <select id="modal-payment-option" class="login-input">
+                    <select id="modal-payment-option" class="login-input" disabled>
                         <option value="GCash">GCash</option>
                         <option value="Bank Transfer">Bank Transfer</option>
                     </select>
                 </div>
                 <div>
                     <label class="login-label">Amount Received (₱)</label>
-                    <input type="number" id="modal-amount" class="login-input" placeholder="0.00" min="0" step="0.01">
+                    <input type="number" id="modal-amount" class="login-input" placeholder="0.00" min="0" step="0.01" readonly>
                 </div>
             </div>
             <div class="modal-actions">
@@ -1160,7 +1169,7 @@ header("Pragma: no-cache");
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="modal-overlay">
+    <div id="confirm-modal" class="modal-overlay" style="z-index: 1002;">
         <div class="modal-container" style="max-width: 450px;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                 <div id="confirm-icon" style="width: 40px; height: 40px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -1403,6 +1412,39 @@ header("Pragma: no-cache");
             3: 'Rooftop Lounge'
         };
 
+        // --- TIMEZONE DISPLAY HELPERS ---
+        // The backend stores ALL timestamps in UTC and returns them as plain
+        // strings (no 'Z' marker). We must explicitly interpret them as UTC and
+        // then render in the application's display timezone, otherwise the
+        // browser parses them as local time and the offset is double-counted.
+        let APP_TZ = 'Asia/Manila';
+        let APP_TZ_LABEL = 'PHT';
+
+        // Pull the canonical timezone from the backend (non-blocking).
+        fetch(`${API_BASE_URL}/config`).then(r => r.ok ? r.json() : null).then(cfg => {
+            if (cfg && cfg.timezone) APP_TZ = cfg.timezone;
+            if (cfg && cfg.timezoneLabel) APP_TZ_LABEL = cfg.timezoneLabel;
+        }).catch(() => {});
+
+        function parseDBDate(value) {
+            if (!value) return null;
+            const str = String(value).trim().replace(' ', 'T');
+            // Date-only -> UTC midnight; datetime -> append 'Z' if missing.
+            const iso = str.length <= 10 ? `${str}T00:00:00Z` : (str.endsWith('Z') ? str : `${str}Z`);
+            const d = new Date(iso);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function fmtDate(value) {
+            const d = parseDBDate(value);
+            return d ? d.toLocaleDateString('en-PH', { timeZone: APP_TZ }) : 'N/A';
+        }
+
+        function fmtDateTime(value) {
+            const d = parseDBDate(value);
+            return d ? `${d.toLocaleString('en-PH', { timeZone: APP_TZ })} ${APP_TZ_LABEL}` : 'N/A';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             if (currentApiKey) {
                 showDashboard();
@@ -1594,6 +1636,7 @@ header("Pragma: no-cache");
                 const status = String(booking.status).toLowerCase().trim();
                 const isConfirmed = status === 'confirmed';
                 const isCancelled = status === 'cancelled';
+                const isPaymentVerified = booking.payment_verified === 1 || booking.payment_verified === true;
                 const isSelected = selectedBookings.has(booking.id);
 
                 const row = document.createElement('tr');
@@ -1603,15 +1646,15 @@ header("Pragma: no-cache");
                     <td><strong>${booking.confirmation_code}</strong></td>
                     <td>${roomNames[booking.room_id] || 'Unknown'}</td>
                     <td>${booking.guest_first_name} ${booking.guest_last_name}</td>
-                    <td>${new Date(booking.check_in).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })}</td>
-                    <td>${new Date(booking.check_out).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })}</td>
+                    <td>${fmtDate(booking.check_in)}</td>
+                    <td>${fmtDate(booking.check_out)}</td>
                     <td>₱${Number(booking.total_price).toLocaleString()}</td>
                     <td><span class="status status-${status}">${booking.status}</span></td>
                     <td>
                         <div class="action-group">
                             <button class="btn-action contact" onclick="openDetailsModal(${booking.id})" style="background-color: #011478;">Details</button>
-                            <button class="btn-action confirm" onclick="openActionModal(${booking.id}, 'confirmed')" ${(isConfirmed || isCancelled) ? 'disabled' : ''}>Confirm</button>
-                            <button class="btn-action cancel" onclick="openActionModal(${booking.id}, 'cancelled')" ${isCancelled ? 'disabled' : ''}>Cancel</button>
+                            <button class="btn-action confirm" onclick="openActionModal(${booking.id}, 'confirmed')" ${(isConfirmed || isCancelled || !isPaymentVerified) ? 'disabled' : ''}>Confirm</button>
+                            <button class="btn-action cancel" onclick="openActionModal(${booking.id}, 'cancelled')" ${(isCancelled || !isPaymentVerified) ? 'disabled' : ''}>Cancel</button>
                             <button class="btn-action contact" onclick="openContactModal(${booking.id})">Contact</button>
                         </div>
                     </td>
@@ -1698,12 +1741,47 @@ header("Pragma: no-cache");
                 confirmFieldsEl.style.display = 'block';
                 
                 textareaEl.value = ''; // Clear input for confirm mode
-                document.getElementById('modal-amount').value = booking.total_price || '';
+
+                // Pre-populate amount + the EXACT payment method submitted by the guest.
+                document.getElementById('modal-amount').value =
+                    (booking.amount_paid != null && Number(booking.amount_paid) > 0) ? booking.amount_paid : (booking.total_price || '');
+                prefillPaymentOption(booking.payment_option);
+
+                // Reset to locked / read-only each time the modal opens.
+                setConfirmLock(true);
             }
             
             document.getElementById('action-modal').style.display = 'flex';
             if (newStatus === 'cancelled') textareaEl.focus();
         }
+
+        // Ensure the guest's submitted method is reflected, adding it as an option
+        // if it isn't one of the presets (e.g. lowercase "gcash").
+        function prefillPaymentOption(method) {
+            const select = document.getElementById('modal-payment-option');
+            if (!method) { select.selectedIndex = 0; return; }
+            const existing = Array.from(select.options)
+                .find(o => o.value.toLowerCase() === String(method).toLowerCase());
+            if (existing) {
+                select.value = existing.value;
+            } else {
+                const opt = document.createElement('option');
+                opt.value = method;
+                opt.textContent = method;
+                select.appendChild(opt);
+                select.value = method;
+            }
+        }
+
+        let confirmFieldsUnlocked = false;
+        function setConfirmLock(locked) {
+            confirmFieldsUnlocked = !locked;
+            document.getElementById('modal-payment-option').disabled = locked;
+            document.getElementById('modal-amount').readOnly = locked;
+            document.getElementById('confirm-lock-icon').textContent = locked ? '🔒' : '🔓';
+            document.getElementById('confirm-lock-label').textContent = locked ? 'Unlock' : 'Lock';
+        }
+        function toggleConfirmLock() { setConfirmLock(confirmFieldsUnlocked); }
 
         function setReason(text) {
             document.getElementById('modal-reason').value = text;
@@ -1893,11 +1971,11 @@ header("Pragma: no-cache");
                     </div>
                     <div>
                         <div style="font-size: 11px; color: rgba(1,20,120,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Check-in</div>
-                        <div>${new Date(booking.check_in).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })}</div>
+                        <div>${fmtDate(booking.check_in)}</div>
                     </div>
                     <div>
                         <div style="font-size: 11px; color: rgba(1,20,120,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Check-out</div>
-                        <div>${new Date(booking.check_out).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })}</div>
+                        <div>${fmtDate(booking.check_out)}</div>
                     </div>
                 </div>
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(1,20,120,0.1);">
@@ -1917,39 +1995,237 @@ header("Pragma: no-cache");
                         </div>
                         <div>
                             <div style="font-size: 11px; color: rgba(1,20,120,0.5); margin-bottom: 4px;">Created</div>
-                            <div>${booking.created_at ? new Date(booking.created_at).toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : 'N/A'}</div>
+                            <div>${fmtDateTime(booking.created_at)}</div>
                         </div>
                         ${booking.updated_at ? `
                         <div>
                             <div style="font-size: 11px; color: rgba(1,20,120,0.5); margin-bottom: 4px;">Last Updated</div>
-                            <div>${new Date(booking.updated_at).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}</div>
+                            <div>${fmtDateTime(booking.updated_at)}</div>
                         </div>
                         ` : ''}
                     </div>
                 </div>
-                ${booking.amount_paid ? `
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(1,20,120,0.1);">
-                    <div style="font-size: 11px; color: rgba(1,20,120,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Payment Information</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div style="font-size: 11px; color: rgba(1,20,120,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Payment &amp; Verification</div>
+                        <span id="pay-verify-badge" style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 9999px; background: #fef9c3; color: #854d0e;">Pending</span>
+                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px;">
                         <div>
                             <div style="font-size: 11px; color: rgba(1,20,120,0.5); margin-bottom: 4px;">Amount Paid</div>
-                            <div style="font-weight: 600;">₱${Number(booking.amount_paid).toLocaleString()}</div>
+                            <input id="pay-amount" type="number" step="0.01" value="${booking.amount_paid != null ? Number(booking.amount_paid) : ''}" readonly
+                                style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid rgba(1,20,120,0.15); border-radius: 8px; font-family: inherit; font-size: 14px; background: #f8fafc; color: #011478;">
                         </div>
                         <div>
                             <div style="font-size: 11px; color: rgba(1,20,120,0.5); margin-bottom: 4px;">Payment Method</div>
-                            <div>${booking.payment_option || 'N/A'}</div>
+                            <input id="pay-method" type="text" value="${booking.payment_option || ''}" readonly
+                                style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid rgba(1,20,120,0.15); border-radius: 8px; font-family: inherit; font-size: 14px; background: #f8fafc; color: #011478;">
                         </div>
                     </div>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px;">
+                        <button id="pay-lock-btn" onclick="togglePaymentLock()" type="button"
+                            style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(1,20,120,0.2); background: white; color: #011478; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;">
+                            <span id="pay-lock-icon">🔒</span><span id="pay-lock-label">Unlock to edit</span>
+                        </button>
+                        <button id="pay-save-btn" onclick="savePaymentEdits()" type="button"
+                            style="display: none; padding: 8px 14px; border-radius: 8px; border: none; background: #011478; color: white; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;">Save changes</button>
+                    </div>
+                    <div style="font-size: 11px; color: rgba(1,20,120,0.5); margin-top: 12px;">Payment Submitted</div>
+                    <div style="font-size: 14px;">${fmtDateTime(booking.payment_submitted_at)}</div>
+
+                    <div style="margin-top: 14px;">
+                        <div style="font-size: 11px; color: rgba(1,20,120,0.5); margin-bottom: 6px;">Proof of Payment</div>
+                        <div id="pay-proof" style="min-height: 40px;">
+                            <span style="font-size: 13px; color: rgba(1,20,120,0.5);">Loading proof…</span>
+                        </div>
+                    </div>
+
+                    <button id="pay-verify-btn" onclick="confirmAndPurge()" type="button"
+                        style="margin-top: 14px; width: 100%; padding: 12px; border-radius: 10px; border: none; background: #166534; color: white; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;">
+                        Mark Payment Verified
+                    </button>
                 </div>
-                ` : ''}
                 ${filesSection}
                 ${notesSection}
             `;
-            
-            // Fetch and display booking history
+
+            // Load payment proof + verification state, then history.
+            loadPaymentSection(booking);
             fetchBookingHistory(bookingId);
             
             document.getElementById('details-modal').style.display = 'flex';
+        }
+
+        // --- PAYMENT WORKFLOW ---
+        let currentDetailsBooking = null;
+        let paymentUnlocked = false;
+        let currentPaymentProof = null; // Store proof data for purge check
+
+        async function loadPaymentSection(booking) {
+            currentDetailsBooking = booking;
+            paymentUnlocked = false;
+            const badge = document.getElementById('pay-verify-badge');
+            const proofEl = document.getElementById('pay-proof');
+            const verifyBtn = document.getElementById('pay-verify-btn');
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/bookings/${booking.id}/proof`, {
+                    headers: { 'x-api-key': currentApiKey }
+                });
+                if (!res.ok) throw new Error('Could not load payment proof');
+                const data = await res.json();
+
+                if (data.verified) {
+                    badge.textContent = 'Verified' + (data.verifiedBy ? ` by ${data.verifiedBy}` : '');
+                    badge.style.background = '#dcfce7';
+                    badge.style.color = '#166534';
+                } else {
+                    badge.textContent = 'Pending';
+                    badge.style.background = '#fef9c3';
+                    badge.style.color = '#854d0e';
+                }
+
+                // Store proof data for purge check
+                currentPaymentProof = data.proof;
+
+                let imagesHtml = '';
+                if (data.proof) {
+                    imagesHtml += `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                        <img src="${data.proof}" alt="Payment proof" onclick="openLightbox(this.src)"
+                            style="max-width: 160px; max-height: 160px; border-radius: 10px; border: 1px solid rgba(1,20,120,0.15); cursor: zoom-in; object-fit: cover;">
+                        <div style="font-size: 11px; color: rgba(1,20,120,0.45);">Payment Proof (click to zoom)</div>
+                    </div>`;
+                }
+                if (data.idFront) {
+                    imagesHtml += `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                        <img src="${data.idFront}" alt="ID Front" onclick="openLightbox(this.src)"
+                            style="max-width: 160px; max-height: 160px; border-radius: 10px; border: 1px solid rgba(1,20,120,0.15); cursor: zoom-in; object-fit: cover;">
+                        <div style="font-size: 11px; color: rgba(1,20,120,0.45);">ID Front (click to zoom)</div>
+                    </div>`;
+                }
+                if (data.idBack) {
+                    imagesHtml += `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                        <img src="${data.idBack}" alt="ID Back" onclick="openLightbox(this.src)"
+                            style="max-width: 160px; max-height: 160px; border-radius: 10px; border: 1px solid rgba(1,20,120,0.15); cursor: zoom-in; object-fit: cover;">
+                        <div style="font-size: 11px; color: rgba(1,20,120,0.45);">ID Back (click to zoom)</div>
+                    </div>`;
+                }
+
+                if (imagesHtml) {
+                    proofEl.innerHTML = `<div style="display: flex; gap: 12px; flex-wrap: wrap;">${imagesHtml}</div>`;
+                    verifyBtn.style.display = 'block';
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Mark Payment Verified';
+                } else {
+                    proofEl.innerHTML = `<span style="font-size: 13px; color: rgba(1,20,120,0.5);">${data.verified ? 'Proof purged after verification.' : 'No proof image on file.'}</span>`;
+                    verifyBtn.style.display = 'block';
+                    verifyBtn.textContent = 'Mark Payment Verified';
+                }
+
+                // If already verified, disable the verify button and change text
+                if (data.verified) {
+                    verifyBtn.disabled = true;
+                    verifyBtn.textContent = 'Payment Verified';
+                    verifyBtn.style.background = '#166534';
+                }
+            } catch (e) {
+                proofEl.innerHTML = `<span style="font-size: 13px; color: #991b1b;">Failed to load proof.</span>`;
+                verifyBtn.style.display = 'none';
+            }
+        }
+
+        function togglePaymentLock() {
+            paymentUnlocked = !paymentUnlocked;
+            const amount = document.getElementById('pay-amount');
+            const method = document.getElementById('pay-method');
+            const icon = document.getElementById('pay-lock-icon');
+            const label = document.getElementById('pay-lock-label');
+            const saveBtn = document.getElementById('pay-save-btn');
+
+            [amount, method].forEach(el => {
+                el.readOnly = !paymentUnlocked;
+                el.style.background = paymentUnlocked ? 'white' : '#f8fafc';
+            });
+            icon.textContent = paymentUnlocked ? '🔓' : '🔒';
+            label.textContent = paymentUnlocked ? 'Locked when done' : 'Unlock to edit';
+            saveBtn.style.display = paymentUnlocked ? 'inline-block' : 'none';
+        }
+
+        async function savePaymentEdits() {
+            if (!currentDetailsBooking) return;
+            const amountPaid = document.getElementById('pay-amount').value;
+            const paymentOption = document.getElementById('pay-method').value.trim();
+            const saveBtn = document.getElementById('pay-save-btn');
+            saveBtn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/bookings/${currentDetailsBooking.id}/payment`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
+                    body: JSON.stringify({ amountPaid: amountPaid === '' ? undefined : Number(amountPaid), paymentOption })
+                });
+                if (!res.ok) throw new Error('Save failed');
+                showToast('success', 'Payment details updated.');
+                togglePaymentLock();
+                fetchBookings();
+                fetchBookingHistory(currentDetailsBooking.id);
+            } catch (e) {
+                showToast('error', 'Failed to update payment details.');
+            } finally {
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function confirmAndPurge() {
+            if (!currentDetailsBooking) return;
+            const verifyBtn = document.getElementById('pay-verify-btn');
+
+            const confirmed = await showConfirmModal(
+                'Mark Payment Verified',
+                'This will mark the payment as verified.',
+                'Verify',
+                'Cancel',
+                false
+            );
+            if (!confirmed) return;
+
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Processing…';
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/bookings/${currentDetailsBooking.id}/verify-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey }
+                });
+                if (!res.ok) throw new Error('Verify failed');
+                showToast('success', 'Payment verified.');
+                await loadPaymentSection(currentDetailsBooking);
+                fetchBookings();
+                fetchBookingHistory(currentDetailsBooking.id);
+            } catch (e) {
+                showToast('error', 'Failed to verify payment.');
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Mark Payment Verified';
+            }
+        }
+
+        // --- IMAGE LIGHTBOX ---
+        function openLightbox(src) {
+            let lb = document.getElementById('image-lightbox');
+            if (!lb) {
+                lb = document.createElement('div');
+                lb.id = 'image-lightbox';
+                lb.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);padding:24px;cursor:zoom-out;';
+                lb.onclick = closeLightbox;
+                lb.innerHTML = '<img id="image-lightbox-img" style="max-width:95vw;max-height:90vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.5);">';
+                document.body.appendChild(lb);
+            }
+            document.getElementById('image-lightbox-img').src = src;
+            lb.style.display = 'flex';
+        }
+
+        function closeLightbox() {
+            const lb = document.getElementById('image-lightbox');
+            if (lb) lb.style.display = 'none';
         }
 
         function closeDetailsModal() {
@@ -2004,7 +2280,7 @@ header("Pragma: no-cache");
                                             ''}
                                     </div>
                                     <div style="font-size: 11px; color: rgba(1,20,120,0.5); white-space: nowrap;">
-                                        ${new Date(item.created_at).toLocaleString()}
+                                        ${fmtDateTime(item.created_at)}
                                     </div>
                                 </div>
                                 <div style="font-size: 12px; color: rgba(1,20,120,0.7); margin-top: 4px;">
@@ -2044,10 +2320,12 @@ header("Pragma: no-cache");
         function showConfirmModal(title, message, confirmText, cancelText, isDestructive = false) {
             document.getElementById('confirm-title').textContent = title;
             document.getElementById('confirm-message').textContent = message;
-            
+
             const confirmBtn = document.getElementById('confirm-action-btn');
+            const cancelBtn = document.querySelector('.btn-modal-cancel');
             confirmBtn.textContent = confirmText || 'Confirm';
-            
+            cancelBtn.textContent = cancelText || 'Cancel';
+
             // Update styling based on action type
             const iconDiv = document.getElementById('confirm-icon');
             if (isDestructive) {
@@ -2063,18 +2341,20 @@ header("Pragma: no-cache");
                 confirmBtn.onmouseover = () => confirmBtn.style.backgroundColor = '#001a72';
                 confirmBtn.onmouseout = () => confirmBtn.style.backgroundColor = '#011478';
             }
-            
-            confirmCallback = null;
-            confirmBtn.onclick = () => {
-                if (confirmCallback) confirmCallback();
-                closeConfirmModal();
-            };
-            
+
             document.getElementById('confirm-modal').style.display = 'flex';
-            
-            // Return a promise that resolves when confirmed
+
+            // Return a promise that resolves when confirmed or cancelled
             return new Promise((resolve) => {
                 confirmCallback = resolve;
+                confirmBtn.onclick = () => {
+                    if (confirmCallback) confirmCallback(true);
+                    closeConfirmModal();
+                };
+                cancelBtn.onclick = () => {
+                    if (confirmCallback) confirmCallback(false);
+                    closeConfirmModal();
+                };
             });
         }
 
@@ -2637,6 +2917,68 @@ header("Pragma: no-cache");
         }
 
         // Bulk confirm
+        function bulkVerify() {
+            const ids = Array.from(selectedBookings);
+            if (ids.length === 0) return;
+
+            // Filter only bookings that are not yet verified
+            const unverifiedIds = ids.filter(id => {
+                const booking = allBookingsData.find(b => b.id === id);
+                return booking && booking.payment_verified !== 1 && booking.payment_verified !== true;
+            });
+
+            if (unverifiedIds.length === 0) {
+                showToast('error', 'No unverified bookings selected. Only unverified bookings can be marked as verified.');
+                return;
+            }
+
+            showConfirmModal(
+                'Mark Payment Verified',
+                `Are you sure you want to mark ${unverifiedIds.length} booking(s) as verified?`,
+                'Verify',
+                'Cancel',
+                false
+            ).then(() => {
+                showToast('info', `Verifying ${unverifiedIds.length} bookings...`);
+
+                // Show loading state
+                const tableBody = document.getElementById('bookings-tbody');
+                tableBody.innerHTML = '<tr><td colspan="9" id="loader">Processing bulk verification...</td></tr>';
+
+                // Process all bookings in parallel
+                const promises = unverifiedIds.map(id => {
+                    return fetch(`${API_BASE_URL}/admin/bookings/${id}/verify-payment`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': currentApiKey
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Failed');
+                        return response.json();
+                    })
+                    .then(data => ({ success: true, id }))
+                    .catch(error => ({ success: false, id, error }));
+                });
+
+                Promise.all(promises).then(results => {
+                    const successful = results.filter(r => r.success).length;
+                    const failed = results.filter(r => !r.success).length;
+
+                    if (successful > 0) {
+                        showToast('success', `${successful} booking(s) verified successfully`);
+                    }
+                    if (failed > 0) {
+                        showToast('error', `${failed} booking(s) failed to verify`);
+                    }
+
+                    clearSelection();
+                    fetchBookings();
+                });
+            });
+        }
+
         function bulkConfirm() {
             const ids = Array.from(selectedBookings);
             if (ids.length === 0) return;

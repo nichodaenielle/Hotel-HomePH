@@ -27,12 +27,19 @@ export default function Home() {
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
   const [guests, setGuests] = useState('1');
+  const [selectedRoom, setSelectedRoom] = useState<'gold' | 'blue' | 'rooftop'>('gold');
   const router = useRouter();
 
   const handleCheckInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newCheckIn = e.target.value;
     setCheckInDate(newCheckIn);
 
+    // For Rooftop, only single date is needed
+    if (selectedRoom === 'rooftop') {
+      return;
+    }
+
+    // For Gold/Blue rooms, auto-set check-out date
     if (newCheckIn && (!checkOutDate || new Date(checkOutDate) <= new Date(newCheckIn))) {
       setCheckOutDate(addDays(newCheckIn, 1));
     }
@@ -42,17 +49,35 @@ export default function Home() {
 
   const handleCheckAvailability = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    const roomId = selectedRoom === 'gold' ? 1 : selectedRoom === 'blue' ? 2 : 3;
+
+    // For Rooftop, only check-in date is required
+    if (selectedRoom === 'rooftop') {
+      if (!checkInDate) {
+        showToast('Please select an event date', 'error');
+        return;
+      }
+      const query = new URLSearchParams();
+      query.append('roomId', roomId.toString());
+      query.append('checkIn', checkInDate);
+      if (guests) query.append('guests', guests);
+      router.push(`/book-now?${query.toString()}`);
+      return;
+    }
+
+    // For Gold/Blue rooms, both dates are required
     if (!checkInDate || !checkOutDate) {
       showToast('Please select both check-in and check-out dates', 'error');
       return;
     }
-    
+
     const query = new URLSearchParams();
+    query.append('roomId', roomId.toString());
     query.append('checkIn', checkInDate);
     query.append('checkOut', checkOutDate);
     if (guests) query.append('guests', guests);
-    
+
     router.push(`/book-now?${query.toString()}`);
   };
 
@@ -116,7 +141,7 @@ export default function Home() {
               <div className="mb-8 text-center">
                 <h2 className="text-4xl font-script text-brand-blue">Check Availability</h2>
               </div>
-              <form onSubmit={handleCheckAvailability} className="grid gap-4 md:grid-cols-[repeat(3,minmax(0,1fr))_220px]">
+              <form onSubmit={handleCheckAvailability} className="grid gap-4 md:grid-cols-[repeat(4,minmax(0,1fr))_220px]">
               <label className="grid gap-3 rounded-3xl bg-white p-4 text-sm text-brand-blue shadow-sm">
                 <span className="flex items-center gap-2 text-brand-blue">
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-blue/10 text-brand-blue">
@@ -124,7 +149,32 @@ export default function Home() {
                       <path fillRule="evenodd" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zm0-13H5V6h14v1z" clipRule="evenodd" />
                     </svg>
                   </span>
-                  Check-In
+                  Room Type
+                </span>
+                <select
+                  value={selectedRoom}
+                  onChange={(e) => {
+                    setSelectedRoom(e.target.value as 'gold' | 'blue' | 'rooftop');
+                    // Reset dates when changing room type
+                    setCheckInDate('');
+                    setCheckOutDate('');
+                  }}
+                  className="w-full rounded-3xl border border-primary-200 bg-white px-4 py-3 text-brand-blue outline-none transition-all duration-200 ease-smooth focus:border-accent focus:shadow-soft"
+                >
+                  <option value="gold">Gold Room - 2 guests</option>
+                  <option value="blue">Blue Room - 4 guests</option>
+                  <option value="rooftop">Rooftop Lounge - 20 guests</option>
+                </select>
+              </label>
+
+              <label className="grid gap-3 rounded-3xl bg-white p-4 text-sm text-brand-blue shadow-sm">
+                <span className="flex items-center gap-2 text-brand-blue">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-blue/10 text-brand-blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                      <path fillRule="evenodd" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zm0-13H5V6h14v1z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                  {selectedRoom === 'rooftop' ? 'Event Date' : 'Check-In'}
                 </span>
                 <input
                   type="date"
@@ -139,27 +189,29 @@ export default function Home() {
                 />
               </label>
 
-              <label className="grid gap-3 rounded-3xl bg-white p-4 text-sm text-brand-blue shadow-sm">
-                <span className="flex items-center gap-2 text-brand-blue">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-blue/10 text-brand-blue">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                      <path fillRule="evenodd" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zm0-13H5V6h14v1z" clipRule="evenodd" />
-                    </svg>
+              {selectedRoom !== 'rooftop' && (
+                <label className="grid gap-3 rounded-3xl bg-white p-4 text-sm text-brand-blue shadow-sm">
+                  <span className="flex items-center gap-2 text-brand-blue">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-blue/10 text-brand-blue">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                        <path fillRule="evenodd" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zm0-13H5V6h14v1z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                    Check-Out
                   </span>
-                  Check-Out
-                </span>
-                <input
-                  type="date"
-                  min={minCheckOutDate}
-                  value={checkOutDate}
-                  onChange={(e) => setCheckOutDate(e.target.value)}
-                  className={`w-full rounded-3xl border px-4 py-3 text-brand-blue outline-none transition-all duration-200 ease-smooth ${
-                    checkOutDate
-                      ? 'border-accent-300 bg-accent-50 shadow-soft'
-                      : 'border-primary-200 bg-white focus:border-accent focus:shadow-soft'
-                  }`}
-                />
-              </label>
+                  <input
+                    type="date"
+                    min={minCheckOutDate}
+                    value={checkOutDate}
+                    onChange={(e) => setCheckOutDate(e.target.value)}
+                    className={`w-full rounded-3xl border px-4 py-3 text-brand-blue outline-none transition-all duration-200 ease-smooth ${
+                      checkOutDate
+                        ? 'border-accent-300 bg-accent-50 shadow-soft'
+                        : 'border-primary-200 bg-white focus:border-accent focus:shadow-soft'
+                    }`}
+                  />
+                </label>
+              )}
 
               <label className="grid gap-3 rounded-3xl bg-white p-4 text-sm text-brand-blue shadow-sm">
                 <span className="flex items-center gap-2 text-brand-blue">
@@ -186,9 +238,9 @@ export default function Home() {
               </label>
 
               <div className="flex items-end pb-4">
-                <button 
-                  type="submit" 
-                  disabled={!checkInDate || !checkOutDate}
+                <button
+                  type="submit"
+                  disabled={!checkInDate || (selectedRoom !== 'rooftop' && !checkOutDate)}
                   className="w-full rounded-3xl border border-transparent bg-brand-blue px-4 py-3 text-sm font-semibold text-brand-white shadow-md transition-all duration-200 ease-smooth hover:bg-primary-600 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-blue disabled:hover:shadow-md disabled:hover:translate-y-0"
                 >
                   Check Availability
