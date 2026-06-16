@@ -3256,6 +3256,8 @@ header("Pragma: no-cache");
                 document.getElementById('bookings-section').style.display = 'flex';
                 document.getElementById('availability-section').style.display = 'none';
                 document.getElementById('availability-section').classList.remove('active');
+                document.getElementById('pricing-section').style.display = 'none';
+                document.getElementById('pricing-section').classList.remove('active');
                 document.getElementById('analytics-section').style.display = 'none';
                 document.getElementById('analytics-section').classList.remove('active');
             } else if (tabName === 'availability') {
@@ -3287,6 +3289,8 @@ header("Pragma: no-cache");
                 document.getElementById('bookings-section').style.display = 'none';
                 document.getElementById('availability-section').style.display = 'none';
                 document.getElementById('availability-section').classList.remove('active');
+                document.getElementById('pricing-section').style.display = 'none';
+                document.getElementById('pricing-section').classList.remove('active');
                 document.getElementById('analytics-section').style.display = 'flex';
                 document.getElementById('analytics-section').classList.add('active');
                 // Initialize charts when first switching to analytics
