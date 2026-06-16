@@ -479,9 +479,10 @@ function BookNowContent() {
           const mergedRooms = data.map((room: any) => ({
             ...room,
             ...roomStaticData[room.id as keyof typeof roomStaticData],
-            weekendPrice: room.weekend_price || room.price,
-            price6Hour: room.price_6hr,
-            weekendPrice6Hour: room.weekend_price_6hr
+            price: Number(room.price),
+            weekendPrice: Number(room.weekend_price || room.price),
+            price6Hour: room.price_6hr ? Number(room.price_6hr) : null,
+            weekendPrice6Hour: room.weekend_price_6hr ? Number(room.weekend_price_6hr) : null
           }));
           setRooms(mergedRooms);
         }
@@ -556,6 +557,8 @@ function BookNowContent() {
     } else {
       roomTotal = selectedRoom.price;
     }
+    // Ensure roomTotal is a number
+    roomTotal = Number(roomTotal);
   }
 
   const isStep3Valid = 
@@ -798,7 +801,7 @@ function BookNowContent() {
                         <p className="text-sm text-brand-blue/60 mt-1">Up to {room.capacity} guests</p>
                         <p className="text-xs text-brand-blue/50 mt-1">{room.features[0]}</p>
                         {room.price !== null ? (
-                          <p className="font-bold text-sm mt-3 uppercase tracking-wider text-accent">From ₱{room.price.toLocaleString()} / {room.id === 3 ? '12-hrs' : 'night'}</p>
+                          <p className="font-bold text-sm mt-3 uppercase tracking-wider text-accent">From ₱{room.price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / {room.id === 3 ? '12-hrs' : 'night'}</p>
                         ) : (
                           <p className="font-bold text-sm mt-3 uppercase tracking-wider text-accent">TBA / night</p>
                         )}
