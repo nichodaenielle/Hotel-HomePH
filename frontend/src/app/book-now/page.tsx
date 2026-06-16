@@ -5,27 +5,30 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useToast } from '@/components/Toast';
 
-// --- MOCK DATA ---
-// In the future, these will come from your database
-const mockRooms = [
-  { 
-    id: 1, name: 'Gold Room', price: 4800, weekendPrice: 5300, capacity: 2, image: '/img/gold-room/gold1.jpg',
-    imagesCount: 15, folder: 'gold-room', prefix: 'gold',
-    features: ['50 SQM with balcony', 'Ideal for 2 guests', '1 King size bed', '1 Bathroom', '4-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth Speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space'] 
+// --- STATIC ROOM DATA (images, features, etc.) ---
+const roomStaticData = {
+  1: {
+    image: '/img/gold-room/gold1.jpg',
+    imagesCount: 15,
+    folder: 'gold-room',
+    prefix: 'gold',
+    features: ['50 SQM with balcony', 'Ideal for 2 guests', '1 King size bed', '1 Bathroom', '4-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth Speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space']
   },
-  { 
-    id: 2, name: 'Blue Room', price: 4800, weekendPrice: 5300, capacity: 4, image: '/img/blue-room/blue4.jpg',
-    imagesCount: 13, folder: 'blue-room', prefix: 'blue',
-    features: ['50 SQM with balcony', 'Ideal for 4 guests', '2 Queen size beds', '1 Bathroom', '6-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space'] 
+  2: {
+    image: '/img/blue-room/blue4.jpg',
+    imagesCount: 13,
+    folder: 'blue-room',
+    prefix: 'blue',
+    features: ['50 SQM with balcony', 'Ideal for 4 guests', '2 Queen size beds', '1 Bathroom', '6-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space']
   },
-  { 
-    id: 3, name: 'Rooftop Lounge', price: 8000, weekendPrice: 10000, capacity: 20, image: '/img/rooftop/rooftop1.jpg',
-    imagesCount: 13, folder: 'rooftop', prefix: 'rooftop',
-    features: ['150 SQM', 'Outdoor and indoor seating', 'Bar counter', 'Dining table setup', 'Air conditioning and WiFi', '65" Smart TV with Bluetooth speaker', 'Microphone for Karaoke - available upon request', 'Contemporary artwork'],
-    price6Hour: 4000,
-    weekendPrice6Hour: 5000
-  },
-];
+  3: {
+    image: '/img/rooftop/rooftop1.jpg',
+    imagesCount: 13,
+    folder: 'rooftop',
+    prefix: 'rooftop',
+    features: ['150 SQM', 'Outdoor and indoor seating', 'Bar counter', 'Dining table setup', 'Air conditioning and WiFi', '65" Smart TV with Bluetooth speaker', 'Microphone for Karaoke - available upon request', 'Contemporary artwork']
+  }
+};
 
 // --- HELPER FUNCTIONS ---
 const formatDate = (date: Date) => {
@@ -323,6 +326,7 @@ function BookNowContent() {
   const [currentStep, setCurrentStep] = useState(1);
   const initialRoomId = searchParams.get('roomId') ? parseInt(searchParams.get('roomId') as string) : null;
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(initialRoomId);
+  const [rooms, setRooms] = useState<any[]>([]);
   const [checkIn, setCheckIn] = useState<Date | null>(
     // For Rooftop, only check-in is needed (single-day booking)
     // For Gold/Blue, both dates are needed (multi-night booking)
@@ -450,7 +454,7 @@ function BookNowContent() {
   }, []);
 
   // Calculate derived values
-  const selectedRoom = mockRooms.find(r => r.id === selectedRoomId);
+  const selectedRoom = rooms.find(r => r.id === selectedRoomId);
   
   let nights = 0;
   if (checkIn && checkOut) {
@@ -462,6 +466,43 @@ function BookNowContent() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentStep, bookingConfirmed]);
+
+  // Fetch rooms from backend API
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const response = await fetch(`${apiUrl}/api/rooms`);
+        if (response.ok) {
+          const data = await response.json();
+          // Merge backend pricing data with static data
+          const mergedRooms = data.map((room: any) => ({
+            ...room,
+            ...roomStaticData[room.id as keyof typeof roomStaticData],
+            weekendPrice: room.weekend_price || room.price,
+            price6Hour: room.price_6hr,
+            weekendPrice6Hour: room.weekend_price_6hr
+          }));
+          setRooms(mergedRooms);
+        }
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+        // Fallback to static data if API fails
+        const fallbackRooms = Object.entries(roomStaticData).map(([id, staticData]) => ({
+          id: parseInt(id),
+          name: id === '1' ? 'Gold Room' : id === '2' ? 'Blue Room' : 'Rooftop Lounge',
+          price: id === '1' || id === '2' ? 4800 : 8000,
+          weekendPrice: id === '1' || id === '2' ? 5300 : 10000,
+          price6Hour: id === '3' ? 4000 : null,
+          weekendPrice6Hour: id === '3' ? 5000 : null,
+          capacity: id === '1' ? 2 : id === '2' ? 4 : 20,
+          ...staticData
+        }));
+        setRooms(fallbackRooms);
+      }
+    };
+    fetchRooms();
+  }, []);
 
   // Fetch blocked dates when selected room changes
   useEffect(() => {
@@ -717,7 +758,7 @@ function BookNowContent() {
               <div className="space-y-6">
                 <h2 className="text-2xl font-semibold mb-6">Select Accommodation</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {mockRooms.map(room => (
+                  {rooms.map(room => (
                     <div
                       key={room.id}
                       onClick={() => {
@@ -1373,7 +1414,7 @@ export default function BookNowPage() {
   );
 }
 
-function RoomDetailsModal({ room, onClose }: { room: typeof mockRooms[0], onClose: () => void }) {
+function RoomDetailsModal({ room, onClose }: { room: any, onClose: () => void }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   
   const handlePrev = () => setCurrentIdx(prev => prev === 0 ? room.imagesCount - 1 : prev - 1);

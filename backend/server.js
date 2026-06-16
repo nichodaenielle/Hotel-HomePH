@@ -129,7 +129,7 @@ app.post('/api/availability', async (req, res) => {
 // 1. Get all rooms
 app.get('/api/rooms', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM rooms');
+    const [rows] = await pool.query('SELECT id, name, price, weekend_price, price_6hr, weekend_price_6hr, capacity FROM rooms');
     res.json(rows);
   } catch (error) {
     console.error('Error fetching rooms:', error);
@@ -1113,6 +1113,72 @@ app.patch('/api/admin/bookings/:id/payment', async (req, res) => {
   } catch (error) {
     console.error('Error editing payment:', error);
     res.status(500).json({ error: 'Failed to edit payment' });
+  }
+});
+
+// Admin Dashboard: Update room pricing
+app.patch('/api/admin/rooms/:id/pricing', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const { id } = req.params;
+  const { price, weekendPrice, price6hr, weekendPrice6hr } = req.body || {};
+  const admin = getAdminUser(req);
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT price, weekend_price, price_6hr, weekend_price_6hr FROM rooms WHERE id = ? LIMIT 1',
+      [id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Room not found' });
+    const current = rows[0];
+
+    const updates = [];
+    const params = [];
+
+    if (price !== undefined && Number(price) !== Number(current.price)) {
+      updates.push('price = ?');
+      params.push(Number(price));
+      await logAudit(pool, {
+        bookingId: null, action: 'pricing_edited', performedBy: admin,
+        field: 'price', oldValue: current.price, newValue: price,
+        notes: `Room ${id} base price changed from ${current.price} to ${price}`
+      });
+    }
+    if (weekendPrice !== undefined && Number(weekendPrice) !== Number(current.weekend_price)) {
+      updates.push('weekend_price = ?');
+      params.push(Number(weekendPrice));
+      await logAudit(pool, {
+        bookingId: null, action: 'pricing_edited', performedBy: admin,
+        field: 'weekend_price', oldValue: current.weekend_price, newValue: weekendPrice,
+        notes: `Room ${id} weekend price changed from ${current.weekend_price} to ${weekendPrice}`
+      });
+    }
+    if (price6hr !== undefined && Number(price6hr) !== Number(current.price_6hr)) {
+      updates.push('price_6hr = ?');
+      params.push(Number(price6hr));
+      await logAudit(pool, {
+        bookingId: null, action: 'pricing_edited', performedBy: admin,
+        field: 'price_6hr', oldValue: current.price_6hr, newValue: price6hr,
+        notes: `Room ${id} 6-hour price changed from ${current.price_6hr} to ${price6hr}`
+      });
+    }
+    if (weekendPrice6hr !== undefined && Number(weekendPrice6hr) !== Number(current.weekend_price_6hr)) {
+      updates.push('weekend_price_6hr = ?');
+      params.push(Number(weekendPrice6hr));
+      await logAudit(pool, {
+        bookingId: null, action: 'pricing_edited', performedBy: admin,
+        field: 'weekend_price_6hr', oldValue: current.weekend_price_6hr, newValue: weekendPrice6hr,
+        notes: `Room ${id} weekend 6-hour price changed from ${current.weekend_price_6hr} to ${weekendPrice6hr}`
+      });
+    }
+
+    if (updates.length === 0) return res.json({ success: true, changed: false });
+
+    params.push(id);
+    await pool.query(`UPDATE rooms SET ${updates.join(', ')} WHERE id = ?`, params);
+    res.json({ success: true, changed: true });
+  } catch (error) {
+    console.error('Error updating room pricing:', error);
+    res.status(500).json({ error: 'Failed to update room pricing' });
   }
 });
 

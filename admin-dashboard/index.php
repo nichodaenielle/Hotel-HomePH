@@ -373,6 +373,16 @@ header("Pragma: no-cache");
         #availability-section.active {
             display: flex;
         }
+        #pricing-section {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        #pricing-section.active {
+            display: flex;
+        }
         
         /* Room Availability Section Styles */
         .room-avail-card {
@@ -672,6 +682,7 @@ header("Pragma: no-cache");
             <div class="tab-navigation">
                 <button class="tab-btn active" onclick="switchTab('bookings')" id="tab-bookings">Bookings</button>
                 <button class="tab-btn" onclick="switchTab('availability')" id="tab-availability">Room Availability</button>
+                <button class="tab-btn" onclick="switchTab('pricing')" id="tab-pricing">Pricing</button>
                 <button class="tab-btn" onclick="switchTab('analytics')" id="tab-analytics">Analytics</button>
             </div>
 
@@ -985,6 +996,78 @@ header("Pragma: no-cache");
                             <div style="width: 8px; height: 8px; background: #011478; border-radius: 50%;"></div>
                         </div>
                         <span style="font-size: 13px; color: rgba(1, 20, 120, 0.8); font-weight: 500;">Today</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Section -->
+            <div id="pricing-section" style="display: none; flex: 1; flex-direction: column; min-height: 0; overflow-y: auto;">
+                <div class="availability-header">
+                    <h2 style="margin: 0 0 8px 0; font-size: 24px; color: #011478;">Room Pricing Management</h2>
+                    <p style="margin: 0; color: rgba(1, 20, 120, 0.6); font-size: 14px;">Manage pricing for all room types</p>
+                </div>
+                
+                <div class="room-avail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <!-- Gold Room Pricing -->
+                    <div class="room-avail-card">
+                        <div style="padding: 20px;">
+                            <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #011478; font-weight: 600;">Gold Room</h3>
+                            <div style="display: grid; gap: 15px;">
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Weekday Price (₱)</label>
+                                    <input type="number" id="gold-price" class="login-input" value="4800" style="padding: 10px 12px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Weekend Price (₱)</label>
+                                    <input type="number" id="gold-weekend-price" class="login-input" value="5300" style="padding: 10px 12px;">
+                                </div>
+                                <button onclick="updateRoomPricing(1)" class="btn-submit" style="margin-top: 10px;">Update Gold Room Pricing</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blue Room Pricing -->
+                    <div class="room-avail-card">
+                        <div style="padding: 20px;">
+                            <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #011478; font-weight: 600;">Blue Room</h3>
+                            <div style="display: grid; gap: 15px;">
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Weekday Price (₱)</label>
+                                    <input type="number" id="blue-price" class="login-input" value="4800" style="padding: 10px 12px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Weekend Price (₱)</label>
+                                    <input type="number" id="blue-weekend-price" class="login-input" value="5300" style="padding: 10px 12px;">
+                                </div>
+                                <button onclick="updateRoomPricing(2)" class="btn-submit" style="margin-top: 10px;">Update Blue Room Pricing</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rooftop Lounge Pricing -->
+                    <div class="room-avail-card">
+                        <div style="padding: 20px;">
+                            <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #011478; font-weight: 600;">Rooftop Lounge</h3>
+                            <div style="display: grid; gap: 15px;">
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">12-Hour Weekday (₱)</label>
+                                    <input type="number" id="rooftop-price" class="login-input" value="8000" style="padding: 10px 12px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">12-Hour Weekend (₱)</label>
+                                    <input type="number" id="rooftop-weekend-price" class="login-input" value="10000" style="padding: 10px 12px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">6-Hour Weekday (₱)</label>
+                                    <input type="number" id="rooftop-price-6hr" class="login-input" value="4000" style="padding: 10px 12px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">6-Hour Weekend (₱)</label>
+                                    <input type="number" id="rooftop-weekend-price-6hr" class="login-input" value="5000" style="padding: 10px 12px;">
+                                </div>
+                                <button onclick="updateRoomPricing(3)" class="btn-submit" style="margin-top: 10px;">Update Rooftop Pricing</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3179,6 +3262,8 @@ header("Pragma: no-cache");
                 document.getElementById('bookings-section').style.display = 'none';
                 document.getElementById('availability-section').style.display = 'flex';
                 document.getElementById('availability-section').classList.add('active');
+                document.getElementById('pricing-section').style.display = 'none';
+                document.getElementById('pricing-section').classList.remove('active');
                 document.getElementById('analytics-section').style.display = 'none';
                 document.getElementById('analytics-section').classList.remove('active');
                 // Initialize availability view when first switching
@@ -3188,6 +3273,16 @@ header("Pragma: no-cache");
                 } else {
                     updateAvailability();
                 }
+            } else if (tabName === 'pricing') {
+                document.getElementById('bookings-section').style.display = 'none';
+                document.getElementById('availability-section').style.display = 'none';
+                document.getElementById('availability-section').classList.remove('active');
+                document.getElementById('pricing-section').style.display = 'flex';
+                document.getElementById('pricing-section').classList.add('active');
+                document.getElementById('analytics-section').style.display = 'none';
+                document.getElementById('analytics-section').classList.remove('active');
+                // Load current pricing when switching to pricing tab
+                loadPricingData();
             } else if (tabName === 'analytics') {
                 document.getElementById('bookings-section').style.display = 'none';
                 document.getElementById('availability-section').style.display = 'none';
@@ -3215,6 +3310,77 @@ header("Pragma: no-cache");
             // Show loading toast
             showToast('info', 'Refreshing analytics...');
             updateAnalytics();
+        }
+
+        // Pricing Management Functions
+        async function loadPricingData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/rooms`);
+                if (response.ok) {
+                    const rooms = await response.json();
+                    rooms.forEach(room => {
+                        if (room.id === 1) {
+                            document.getElementById('gold-price').value = room.price || 4800;
+                            document.getElementById('gold-weekend-price').value = room.weekend_price || 5300;
+                        } else if (room.id === 2) {
+                            document.getElementById('blue-price').value = room.price || 4800;
+                            document.getElementById('blue-weekend-price').value = room.weekend_price || 5300;
+                        } else if (room.id === 3) {
+                            document.getElementById('rooftop-price').value = room.price || 8000;
+                            document.getElementById('rooftop-weekend-price').value = room.weekend_price || 10000;
+                            document.getElementById('rooftop-price-6hr').value = room.price_6hr || 4000;
+                            document.getElementById('rooftop-weekend-price-6hr').value = room.weekend_price_6hr || 5000;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading pricing data:', error);
+                showToast('error', 'Failed to load pricing data');
+            }
+        }
+
+        async function updateRoomPricing(roomId) {
+            let price, weekendPrice, price6hr, weekendPrice6hr;
+            
+            if (roomId === 1) {
+                price = parseFloat(document.getElementById('gold-price').value);
+                weekendPrice = parseFloat(document.getElementById('gold-weekend-price').value);
+            } else if (roomId === 2) {
+                price = parseFloat(document.getElementById('blue-price').value);
+                weekendPrice = parseFloat(document.getElementById('blue-weekend-price').value);
+            } else if (roomId === 3) {
+                price = parseFloat(document.getElementById('rooftop-price').value);
+                weekendPrice = parseFloat(document.getElementById('rooftop-weekend-price').value);
+                price6hr = parseFloat(document.getElementById('rooftop-price-6hr').value);
+                weekendPrice6hr = parseFloat(document.getElementById('rooftop-weekend-price-6hr').value);
+            }
+
+            const requestBody = { price, weekendPrice };
+            if (roomId === 3) {
+                requestBody.price6hr = price6hr;
+                requestBody.weekendPrice6hr = weekendPrice6hr;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/rooms/${roomId}/pricing`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': ADMIN_PASSWORD
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (response.ok) {
+                    showToast('success', 'Pricing updated successfully');
+                } else {
+                    const error = await response.json();
+                    showToast('error', error.error || 'Failed to update pricing');
+                }
+            } catch (error) {
+                console.error('Error updating pricing:', error);
+                showToast('error', 'Failed to update pricing');
+            }
         }
 
         function updateAnalytics() {
