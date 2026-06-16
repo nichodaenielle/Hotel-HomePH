@@ -1374,7 +1374,7 @@ function BookNowContent() {
                 <div className="flex justify-between items-end">
                   <span className="text-white/80">Total Due</span>
                   <span className="text-2xl font-bold text-brand-yellow tracking-wider">
-                    {roomTotal !== null ? `₱${roomTotal.toLocaleString()}` : 'TBA'}
+                    {roomTotal !== null ? `₱${roomTotal.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'TBA'}
                   </span>
                 </div>
                 {roomTotal !== null && (
