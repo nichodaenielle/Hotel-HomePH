@@ -4,6 +4,29 @@ const cors = require('cors');
 const pool = require('./db');
 const nodemailer = require('nodemailer');
 const path = require('path');
+const { logAudit } = require('./lib/audit');
+const availability = require('./lib/availability');
+
+// Application display timezone (timestamps are STORED in UTC; this is only used
+// by clients for display). Defaults to Philippine Standard Time.
+const APP_TIMEZONE = process.env.APP_TIMEZONE || 'Asia/Manila';
+const APP_TIMEZONE_LABEL = process.env.APP_TIMEZONE_LABEL || 'PHT';
+
+// Resolve which admin performed an action. Auth is a shared secret, so identity
+// is best-effort via an optional header the dashboard can send.
+function getAdminUser(req) {
+  return (req.headers['x-admin-user'] || req.body?.performedBy || 'admin').toString().slice(0, 100);
+}
+
+// Returns true if the request carries a valid admin key; otherwise sends 401.
+function requireAdmin(req, res) {
+  const validPassword = process.env.ADMIN_SECRET || 'hotelathomeadmin';
+  if (!req.headers['x-api-key'] || req.headers['x-api-key'] !== validPassword) {
+    res.status(401).json({ error: 'Unauthorized. Invalid admin password.' });
+    return false;
+  }
+  return true;
+}
 
 const app = express();
 
@@ -29,6 +52,7 @@ const allowedOrigins = [
   'https://www.hotelathomeph.com',
   'http://localhost:3000',
   'http://localhost:3005', // Local testing via Start_Dashboard.bat
+  'http://localhost:8000', // Admin dashboard local testing
   'http://localhost:8080', // Admin dashboard PHP server
   'http://127.0.0.1:8080', // Admin dashboard PHP server (alternate)
   'https://admin.hotelathomeph.com', // Allow admin dashboard
@@ -77,6 +101,29 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Hotel at Home Backend is running!' });
 });
 
+// Public config: exposes the display timezone so frontend & admin render
+// identical local times from UTC-stored timestamps.
+app.get('/api/config', (req, res) => {
+  res.json({ timezone: APP_TIMEZONE, timezoneLabel: APP_TIMEZONE_LABEL });
+});
+
+// Real-time availability check (AJAX). Single source of truth = availability engine.
+app.post('/api/availability', async (req, res) => {
+  try {
+    const { roomId, checkIn, checkOut, checkInTime, checkOutTime, excludeId } = req.body;
+    if (!roomId || !checkIn || !checkOut) {
+      return res.status(400).json({ error: 'roomId, checkIn and checkOut are required.' });
+    }
+    const result = await availability.checkAvailability(pool, {
+      roomId, checkIn, checkOut, checkInTime, checkOutTime, excludeId
+    });
+    res.json(result);
+  } catch (error) {
+    console.error('Availability check failed:', error);
+    res.status(500).json({ error: error.message || 'Failed to check availability' });
+  }
+});
+
 // --- API ROUTES ---
 
 // 1. Get all rooms
@@ -97,25 +144,16 @@ app.post('/api/bookings', async (req, res) => {
       roomId, guestFirstName, guestLastName, guestEmail, guestPhone,
       checkIn, checkOut, totalPrice, purpose, guests,
       proofBase64, idFrontBase64, idBackBase64,
-      paymentMethod, amountPaid
+      paymentMethod, amountPaid,
+      checkInTime, checkOutTime
     } = req.body;
 
-    // --- OVERLAP VALIDATION ---
-    // Check if the chosen dates have been booked by someone else
-    // If Gold or Blue room is selected, also check if the Rooftop Lounge (ID 3) is already booked
-    let overlapQuery = "SELECT id FROM bookings WHERE (room_id = ? OR room_id = 3) AND status != 'cancelled' AND check_in < ? AND check_out > ?";
-    let overlapParams = [roomId, checkOut, checkIn];
-
-    // If Rooftop Lounge (ID 3), check if ANY room is booked during these dates
-    if (parseInt(roomId) === 3) {
-      overlapQuery = "SELECT id FROM bookings WHERE status != 'cancelled' AND check_in < ? AND check_out > ?";
-      overlapParams = [checkOut, checkIn];
+    if (!roomId || !checkIn || !checkOut) {
+      return res.status(400).json({ error: 'Missing required booking fields.' });
     }
 
-    const [overlaps] = await pool.query(overlapQuery, overlapParams);
-    if (overlaps.length > 0) {
-      return res.status(400).json({ error: 'These dates have just been booked. Please select different dates.' });
-    }
+    // Build the full datetime window (single source of truth for times).
+    const window = availability.buildWindow({ roomId, checkIn, checkOut, checkInTime, checkOutTime });
 
     // Generate a random confirmation code (e.g., HH-A1B2C3)
     const confirmationCode = 'HH-' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -123,12 +161,55 @@ app.post('/api/bookings', async (req, res) => {
     // Safe fallback in case a room like Rooftop Lounge has a null/TBA price
     const finalPrice = totalPrice || 0;
 
-    const [result] = await pool.query(
-      `INSERT INTO bookings 
-      (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, booking_purpose, payment_option, amount_paid) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [confirmationCode, roomId, guestFirstName, guestLastName, guestEmail, guestPhone, checkIn, checkOut, finalPrice, purpose || null, paymentMethod || null, amountPaid || 0]
-    );
+    // Record the payment submission time (UTC) when payment info is provided.
+    const paymentSubmittedAt = (paymentMethod || proofBase64) ? new Date() : null;
+
+    // --- ATOMIC, CONCURRENCY-SAFE BOOKING CREATION ---
+    // Re-check conflicts with row/gap locks inside a transaction so two
+    // simultaneous requests cannot both pass validation and double-book.
+    const conn = await pool.getConnection();
+    let result;
+    try {
+      await conn.beginTransaction();
+
+      const conflicts = await availability.findConflicts(conn, {
+        roomId,
+        start: window.start,
+        end: window.end,
+        forUpdate: true
+      });
+
+      if (conflicts.length > 0) {
+        await conn.rollback();
+        return res.status(409).json({
+          error: 'These dates have just been booked. Please select different dates.',
+          conflicts: conflicts.map(c => c.confirmation_code)
+        });
+      }
+
+      [result] = await conn.query(
+        `INSERT INTO bookings
+        (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, booking_purpose, payment_option, amount_paid, payment_submitted_at, payment_proof_data, id_front_data, id_back_data)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [confirmationCode, roomId, guestFirstName, guestLastName, guestEmail, guestPhone, window.start, window.end, finalPrice, purpose || null, paymentMethod || null, amountPaid || 0, paymentSubmittedAt, proofBase64 || null, idFrontBase64 || null, idBackBase64 || null]
+      );
+
+      // Audit: booking created (inside the same transaction)
+      await logAudit(conn, {
+        bookingId: result.insertId,
+        action: 'created',
+        newStatus: 'pending',
+        performedBy: 'guest',
+        notes: `Booking ${confirmationCode} created (${window.start} → ${window.end})`
+      });
+
+      await conn.commit();
+    } catch (txErr) {
+      try { await conn.rollback(); } catch (_) {}
+      throw txErr;
+    } finally {
+      conn.release();
+    }
 
     // Send Email Notifications (Async, so it doesn't block the response if it fails)
     try {
@@ -444,23 +525,69 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
-// 4. Get blocked dates for a specific room
+// 4. Get blocked dates for a specific room (with detailed booking info)
 app.get('/api/bookings/dates/:roomId', async (req, res) => {
   try {
     const { roomId } = req.params;
-    
-    // If Gold or Blue room is selected, fetch dates where this room OR the Rooftop Lounge is booked
-    let query = "SELECT check_in, check_out FROM bookings WHERE (room_id = ? OR room_id = 3) AND status != 'cancelled'";
-    let queryParams = [roomId];
+    const { startDate, endDate } = req.query;
 
-    // If Rooftop Lounge (ID 3) is selected, block dates if Gold (1), Blue (2), or Rooftop (3) is booked
-    if (parseInt(roomId) === 3) {
-      query = "SELECT check_in, check_out FROM bookings WHERE status != 'cancelled'";
-      queryParams = [];
+    // Fetch all non-cancelled bookings for the room (or all rooms if Rooftop)
+    let query = "SELECT id, room_id, confirmation_code, check_in, check_out, status FROM bookings WHERE status != 'cancelled'";
+    let queryParams = [];
+
+    if (parseInt(roomId) !== 3) {
+      // For Gold/Blue rooms, include bookings for this room OR Rooftop
+      query += " AND (room_id = ? OR room_id = 3)";
+      queryParams = [roomId];
+    }
+    // For Rooftop, fetch all bookings (blocks all rooms)
+
+    // Optionally filter by date range for performance
+    if (startDate && endDate) {
+      query += " AND check_in <= ? AND check_out >= ?";
+      queryParams.push(endDate, startDate);
     }
 
     const [rows] = await pool.query(query, queryParams);
-    res.json(rows);
+
+    // Group bookings by date with detailed time information
+    const bookingsByDate = {};
+    const buffer = availability.bufferForRoom(Number(roomId));
+
+    rows.forEach(booking => {
+      const checkIn = new Date(booking.check_in);
+      const checkOut = new Date(booking.check_out);
+
+      // Apply buffer: block from checkIn - buffer to checkOut + buffer
+      const bufferStart = new Date(checkIn.getTime() - buffer * 60000);
+      const bufferEnd = new Date(checkOut.getTime() + buffer * 60000);
+
+      // Mark all dates in the buffered range as blocked with booking details
+      let current = new Date(bufferStart);
+      current.setHours(0, 0, 0, 0);
+      const end = new Date(bufferEnd);
+      end.setHours(0, 0, 0, 0);
+
+      while (current <= end) {
+        const dateKey = current.toISOString().split('T')[0];
+        if (!bookingsByDate[dateKey]) {
+          bookingsByDate[dateKey] = [];
+        }
+        // Add booking details for this date
+        bookingsByDate[dateKey].push({
+          id: booking.id,
+          roomId: booking.room_id,
+          confirmationCode: booking.confirmation_code,
+          checkIn: booking.check_in,
+          checkOut: booking.check_out,
+          status: booking.status,
+          isRooftopBlock: booking.room_id === 3 && parseInt(roomId) !== 3
+        });
+        current.setDate(current.getDate() + 1);
+      }
+    });
+
+    res.json(bookingsByDate);
   } catch (error) {
     console.error('Error fetching blocked dates:', error);
     res.status(500).json({ error: 'Failed to fetch dates' });
@@ -479,7 +606,18 @@ app.get('/api/admin/bookings', async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query('SELECT * FROM bookings ORDER BY id DESC');
+    // Exclude the large payment_proof_data blob from the list; expose a flag
+    // instead. The proof itself is fetched on demand via the proof endpoint.
+    const [rows] = await pool.query(
+      `SELECT id, confirmation_code, room_id, guest_first_name, guest_last_name,
+              guest_email, guest_phone, check_in, check_out, total_price, amount_paid,
+              payment_option, payment_verified, payment_verified_at, payment_verified_by,
+              payment_submitted_at, payment_proof_url, id_document_url,
+              booking_purpose, admin_notes, status, created_at, updated_at,
+              (payment_proof_data IS NOT NULL) AS has_payment_proof
+         FROM bookings
+        ORDER BY id DESC`
+    );
     res.json(rows);
   } catch (error) {
     console.error('Error fetching admin bookings:', error);
@@ -501,17 +639,12 @@ app.post('/api/admin/block-dates', async (req, res) => {
   try {
     const roomsToBlock = roomId === 'all' ? [1, 2, 3] : [parseInt(roomId)];
 
-    // First pass: Check for overlaps to prevent partial blocks
+    // First pass: Check for overlaps to prevent partial blocks (engine-driven)
     for (let rId of roomsToBlock) {
-      let overlapQuery = "SELECT id FROM bookings WHERE (room_id = ? OR room_id = 3) AND status != 'cancelled' AND check_in < ? AND check_out > ?";
-      let overlapParams = [rId, checkOut, checkIn];
-
-      if (rId === 3) {
-        overlapQuery = "SELECT id FROM bookings WHERE status != 'cancelled' AND check_in < ? AND check_out > ?";
-        overlapParams = [checkOut, checkIn];
-      }
-
-      const [overlaps] = await pool.query(overlapQuery, overlapParams);
+      const w = availability.buildWindow({ roomId: rId, checkIn, checkOut });
+      const overlaps = await availability.findConflicts(pool, {
+        roomId: rId, start: w.start, end: w.end
+      });
       if (overlaps.length > 0) {
         return res.status(400).json({ error: `These dates overlap with an existing booking or block.` });
       }
@@ -520,13 +653,23 @@ app.post('/api/admin/block-dates', async (req, res) => {
     // Second pass: Insert blocks safely
     for (let rId of roomsToBlock) {
       const confirmationCode = 'BLK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      
-      await pool.query(
+      const w = availability.buildWindow({ roomId: rId, checkIn, checkOut });
+
+      const [blockResult] = await pool.query(
         `INSERT INTO bookings 
         (confirmation_code, room_id, guest_first_name, guest_last_name, guest_email, guest_phone, check_in, check_out, total_price, booking_purpose, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [confirmationCode, rId, 'System', 'Block', 'admin@hotelathomeph.com', 'N/A', checkIn, checkOut, 0, reason || 'Manual Block', 'confirmed']
+        [confirmationCode, rId, 'System', 'Block', 'admin@hotelathomeph.com', 'N/A', w.start, w.end, 0, reason || 'Manual Block', 'confirmed']
       );
+
+      // Audit: manual date block / availability override
+      await logAudit(pool, {
+        bookingId: blockResult.insertId,
+        action: 'blocked',
+        newStatus: 'confirmed',
+        performedBy: getAdminUser(req),
+        notes: `Manual block on room ${rId} (${checkIn} → ${checkOut})${reason ? ': ' + reason : ''}`
+      });
     }
 
     res.status(201).json({ success: true, message: 'Dates blocked successfully.' });
@@ -546,10 +689,37 @@ app.patch('/api/admin/bookings/:id/status', async (req, res) => {
   }
 
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, amount_paid, payment_option } = req.body;
 
   try {
-    await pool.query('UPDATE bookings SET status = ? WHERE id = ?', [status, id]);
+    // Capture previous status for the audit trail before updating.
+    const [prevRows] = await pool.query('SELECT status FROM bookings WHERE id = ?', [id]);
+    const oldStatus = prevRows.length ? prevRows[0].status : null;
+
+    // The confirm modal can also submit payment details; persist them too.
+    const setClauses = ['status = ?'];
+    const setParams = [status];
+    if (amount_paid !== undefined && amount_paid !== null && amount_paid !== '') {
+      setClauses.push('amount_paid = ?');
+      setParams.push(Number(amount_paid));
+    }
+    if (payment_option !== undefined && payment_option !== null && payment_option !== '') {
+      setClauses.push('payment_option = ?');
+      setParams.push(payment_option);
+    }
+    setParams.push(id);
+    await pool.query(`UPDATE bookings SET ${setClauses.join(', ')} WHERE id = ?`, setParams);
+
+    // Audit: status change (action mirrors target status so the dashboard
+    // timeline colour-codes confirm/cancel correctly).
+    await logAudit(pool, {
+      bookingId: Number(id),
+      action: (status === 'confirmed' || status === 'cancelled') ? status : 'updated',
+      oldStatus,
+      newStatus: status,
+      performedBy: getAdminUser(req),
+      notes: `Status changed from ${oldStatus || 'unknown'} to ${status}`
+    });
 
     // Send a follow-up email to the guest based on the status change
     try {
@@ -798,6 +968,151 @@ app.patch('/api/admin/bookings/:id/status', async (req, res) => {
   } catch (error) {
     console.error('Error updating status:', error);
     res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+// Admin Dashboard: Get audit history for a booking
+app.get('/api/admin/bookings/:id/history', async (req, res) => {
+  const apiKey = req.headers['x-api-key'];
+  const validPassword = process.env.ADMIN_SECRET || 'hotelathomeadmin';
+
+  if (!apiKey || apiKey !== validPassword) {
+    return res.status(401).json({ error: 'Unauthorized. Invalid admin password.' });
+  }
+
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query(
+      `SELECT action, old_status, new_status, performed_by, notes,
+              field_changed, old_value, new_value, created_at
+         FROM booking_history
+        WHERE booking_id = ?
+        ORDER BY created_at DESC, id DESC`,
+      [id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching booking history:', error);
+    res.status(500).json({ error: 'Failed to fetch booking history' });
+  }
+});
+
+// Admin Dashboard: Fetch the stored payment proof (data URL) on demand.
+app.get('/api/admin/bookings/:id/proof', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query(
+      `SELECT payment_proof_data, payment_proof_url, id_front_data, id_back_data, payment_option,
+              payment_verified, payment_verified_at, payment_verified_by, payment_submitted_at
+         FROM bookings WHERE id = ? LIMIT 1`,
+      [id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Booking not found' });
+    const b = rows[0];
+    res.json({
+      proof: b.payment_proof_data || b.payment_proof_url || null,
+      idFront: b.id_front_data || null,
+      idBack: b.id_back_data || null,
+      paymentOption: b.payment_option,
+      verified: !!b.payment_verified,
+      verifiedAt: b.payment_verified_at,
+      verifiedBy: b.payment_verified_by,
+      submittedAt: b.payment_submitted_at
+    });
+  } catch (error) {
+    console.error('Error fetching payment proof:', error);
+    res.status(500).json({ error: 'Failed to fetch payment proof' });
+  }
+});
+
+// Admin Dashboard: Verify payment and (optionally) purge the proof image.
+app.post('/api/admin/bookings/:id/verify-payment', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const { id } = req.params;
+  const admin = getAdminUser(req);
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [rows] = await conn.query(
+      'SELECT payment_verified FROM bookings WHERE id = ? FOR UPDATE',
+      [id]
+    );
+    if (rows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    // Mark payment verified.
+    await conn.query(
+      'UPDATE bookings SET payment_verified = 1, payment_verified_at = ?, payment_verified_by = ? WHERE id = ?',
+      [new Date(), admin, id]
+    );
+    await logAudit(conn, {
+      bookingId: Number(id),
+      action: 'payment_verified',
+      performedBy: admin,
+      notes: 'Payment marked as verified'
+    });
+
+    await conn.commit();
+    res.json({ success: true, verified: true });
+  } catch (error) {
+    try { await conn.rollback(); } catch (_) {}
+    console.error('Error verifying payment:', error);
+    res.status(500).json({ error: 'Failed to verify payment' });
+  } finally {
+    conn.release();
+  }
+});
+
+// Admin Dashboard: Edit payment fields (amount_paid / payment_option) with audit.
+app.patch('/api/admin/bookings/:id/payment', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const { id } = req.params;
+  const { amountPaid, paymentOption } = req.body || {};
+  const admin = getAdminUser(req);
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT amount_paid, payment_option FROM bookings WHERE id = ? LIMIT 1',
+      [id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Booking not found' });
+    const current = rows[0];
+
+    const updates = [];
+    const params = [];
+
+    if (amountPaid !== undefined && Number(amountPaid) !== Number(current.amount_paid)) {
+      updates.push('amount_paid = ?');
+      params.push(Number(amountPaid));
+      await logAudit(pool, {
+        bookingId: Number(id), action: 'payment_edited', performedBy: admin,
+        field: 'amount_paid', oldValue: current.amount_paid, newValue: amountPaid,
+        notes: `Amount paid changed from ${current.amount_paid} to ${amountPaid}`
+      });
+    }
+    if (paymentOption !== undefined && paymentOption !== current.payment_option) {
+      updates.push('payment_option = ?');
+      params.push(paymentOption);
+      await logAudit(pool, {
+        bookingId: Number(id), action: 'payment_edited', performedBy: admin,
+        field: 'payment_option', oldValue: current.payment_option, newValue: paymentOption,
+        notes: `Payment method changed from ${current.payment_option || 'none'} to ${paymentOption}`
+      });
+    }
+
+    if (updates.length === 0) return res.json({ success: true, changed: false });
+
+    params.push(id);
+    await pool.query(`UPDATE bookings SET ${updates.join(', ')} WHERE id = ?`, params);
+    res.json({ success: true, changed: true });
+  } catch (error) {
+    console.error('Error editing payment:', error);
+    res.status(500).json({ error: 'Failed to edit payment' });
   }
 });
 

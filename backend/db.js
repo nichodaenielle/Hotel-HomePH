@@ -4,7 +4,11 @@ require('dotenv').config();
 // Local dev uses port 3308, production uses 3306
 const dbPort = process.env.DB_PORT ? Number(process.env.DB_PORT) : 3308;
 
-// Create a connection pool to MySQL Database
+// Create a connection pool to MySQL Database.
+// IMPORTANT (timezone consistency): all timestamps are stored and returned in UTC.
+// - `timezone: 'Z'` makes mysql2 interpret/format JS Dates as UTC.
+// - `dateStrings: true` returns DATE/DATETIME/TIMESTAMP as raw strings (no implicit
+//   local-time conversion). Clients MUST treat these strings as UTC.
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
   port: dbPort,
@@ -14,7 +18,14 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  dateStrings: true
+  dateStrings: true,
+  timezone: 'Z'
+});
+
+// Force every pooled connection's SQL session to UTC so CURRENT_TIMESTAMP and
+// TIMESTAMP retrieval are deterministic regardless of the host server's timezone.
+pool.on('connection', (connection) => {
+  connection.query("SET time_zone = '+00:00'");
 });
 
 module.exports = pool;
