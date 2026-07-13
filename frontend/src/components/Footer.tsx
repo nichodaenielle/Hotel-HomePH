@@ -43,13 +43,13 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="tel:+639278584938" className="transition hover:text-[#f9cd2a]">
-                  +63 927 858 4938
+                <a href="tel:+639681907363" className="transition hover:text-[#f9cd2a]">
+                  +63 968 190 7363
                 </a>
               </li>
               <li>
-                <a href="tel:+639178876444" className="transition hover:text-[#f9cd2a]">
-                  +63 917 887 6444
+                <a href="tel:+639178800387" className="transition hover:text-[#f9cd2a]">
+                  +63 917 880 0387
                 </a>
               </li>
             </ul>
@@ -77,7 +77,7 @@ export default function Footer() {
                   <path d="m3 7 9 6 9-6" />
                 </svg>
               </a>
-              <a href="viber://chat?number=09189230346" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-white/20 transition hover:bg-[#f9cd2a] hover:text-brand-blue">
+              <a href="viber://chat?number=09681907363" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-white/20 transition hover:bg-[#f9cd2a] hover:text-brand-blue">
                 <span className="sr-only">Viber</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />

@@ -495,11 +495,11 @@ app.post('/api/bookings', async (req, res) => {
                             <tr>
                               <td width="33%" style="padding: 12px; background: #f3f6fb; border-radius: 8px; text-align: center;">
                                 <p style="margin: 0; font-size: 20px;">📞</p>
-                                <p style="margin: 4px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;"><a href="tel:+639278584938" style="color: #011478; text-decoration: none; font-weight: 500;">+63 927 858 4938</a></p>
+                                <p style="margin: 4px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;"><a href="tel:+639681907363" style="color: #011478; text-decoration: none; font-weight: 500;">+63 968 190 7363</a></p>
                               </td>
                               <td width="34%" style="padding: 12px; background: #f3f6fb; border-radius: 8px; text-align: center;">
-                                <p style="margin: 0; font-size: 20px;">�</p>
-                                <p style="margin: 4px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;"><a href="viber://chat?number=639278584938" style="color: #011478; text-decoration: none; font-weight: 500;">Viber Chat</a></p>
+                                <p style="margin: 0; font-size: 20px;">💬</p>
+                                <p style="margin: 4px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;"><a href="viber://chat?number=639681907363" style="color: #011478; text-decoration: none; font-weight: 500;">Viber Chat</a></p>
                               </td>
                               <td width="33%" style="padding: 12px; background: #f3f6fb; border-radius: 8px; text-align: center;">
                                 <p style="margin: 0; font-size: 20px;">📧</p>
@@ -981,7 +981,7 @@ app.patch('/api/admin/bookings/:id/status', async (req, res) => {
                               <tr>
                                 <td style="padding: 20px; background: #eff6ff; border-radius: 12px; border-left: 4px solid #011478;">
                                   <p style="margin: 0 0 8px 0; color: #011478; font-size: 13px; font-weight: bold; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 1px;">📍 Check-in Details</p>
-                                  <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;"><strong>Time:</strong> 2:00 PM onwards (Gold & Blue Rooms)<br><strong>Location:</strong> Hotel at Home, Amadeo, Cavite<br><strong>Contact:</strong> +63 927 858 4938</p>
+                                  <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;"><strong>Time:</strong> 2:00 PM onwards (Gold & Blue Rooms)<br><strong>Location:</strong> Hotel at Home, Amadeo, Cavite<br><strong>Contact:</strong> +63 968 190 7363 / +63 917 880 0387</p>
                                 </td>
                               </tr>
                             </table>
@@ -1002,7 +1002,7 @@ app.patch('/api/admin/bookings/:id/status', async (req, res) => {
                           <td style="background: #011478; padding: 32px 40px; text-align: center;">
                             <p style="margin: 0 0 8px 0; color: #facc15; font-size: 20px; font-style: italic;">Hotel at Home</p>
                             <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.6; font-family: Arial, sans-serif;">Amadeo, Cavite — Your Mediterranean Escape</p>
-                            <p style="margin: 16px 0 0 0; color: rgba(255,255,255,0.5); font-size: 12px; font-family: Arial, sans-serif;">📞 +63 927 858 4938 | 💬 Viber | 📧 hotelathome.ph@gmail.com</p>
+                            <p style="margin: 16px 0 0 0; color: rgba(255,255,255,0.5); font-size: 12px; font-family: Arial, sans-serif;">📞 +63 968 190 7363 / +63 917 880 0387 | 💬 Viber | 📧 hotelathome.ph@gmail.com</p>
                           </td>
                         </tr>
                       </table>
@@ -1079,11 +1079,11 @@ app.patch('/api/admin/bookings/:id/status', async (req, res) => {
                               <tr>
                                 <td width="33%" style="padding: 12px; background: #f3f6fb; border-radius: 8px; text-align: center;">
                                   <p style="margin: 0; font-size: 20px;">📞</p>
-                                  <p style="margin: 4px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;"><a href="tel:+639278584938" style="color: #011478; text-decoration: none; font-weight: 500;">+63 927 858 4938</a></p>
+                                  <p style="margin: 4px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;"><a href="tel:+639681907363" style="color: #011478; text-decoration: none; font-weight: 500;">+63 968 190 7363</a></p>
                                 </td>
                                 <td width="34%" style="padding: 12px; background: #f3f6fb; border-radius: 8px; text-align: center;">
                                   <p style="margin: 0; font-size: 20px;">💬</p>
-                                  <p style="margin: 4px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;"><a href="viber://chat?number=639278584938" style="color: #011478; text-decoration: none; font-weight: 500;">Viber Chat</a></p>
+                                  <p style="margin: 4px 0 0 0; font-size: 12px; font-family: Arial, sans-serif;"><a href="viber://chat?number=639681907363" style="color: #011478; text-decoration: none; font-weight: 500;">Viber Chat</a></p>
                                 </td>
                                 <td width="33%" style="padding: 12px; background: #f3f6fb; border-radius: 8px; text-align: center;">
                                   <p style="margin: 0; font-size: 20px;">📧</p>
