@@ -46,7 +46,7 @@ const faqs = [
         Humidifier<br />
         Flat Iron and Ironing Board, steamer – available upon request<br />
         Board Games<br />
-        Free Breakfast for Two (2)<br />
+        Free Breakfast – for Two (2) in Gold Room, for Four (4) in Blue Room<br />
         <br />
         <strong>Rooftop Lounge</strong><br />
         Dining area – Indoor and outdoor<br />

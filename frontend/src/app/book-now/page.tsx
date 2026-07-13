@@ -19,7 +19,7 @@ const roomStaticData = {
     imagesCount: 13,
     folder: 'blue-room',
     prefix: 'blue',
-    features: ['50 SQM with balcony', 'Ideal for 4 guests', '2 Queen size beds', '1 Bathroom', '6-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space', 'Board Games', 'Free Breakfast for Two (2)']
+    features: ['50 SQM with balcony', 'Ideal for 4 guests', '2 Queen size beds', '1 Bathroom', '6-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space', 'Board Games', 'Free Breakfast for Four (4)']
   },
   3: {
     image: '/img/rooftop/rooftop1.jpg',

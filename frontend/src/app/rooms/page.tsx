@@ -296,7 +296,7 @@ function BlueRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
             <p>Contemporary artwork</p>
             <p>Parking space</p>
             <p>Board Games</p>
-            <p>Free Breakfast for Two (2)</p>
+            <p>Free Breakfast for Four (4)</p>
           </div>
         </div>
         <div className="flex items-center justify-between gap-4 pt-4 border-t border-brand-blue/10">
