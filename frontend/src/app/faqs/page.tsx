@@ -59,6 +59,16 @@ const faqs = [
     )
   },
   {
+    question: 'What are the payment terms?',
+    answer:
+      'A 50% reservation fee is required, to be deducted from the total accommodation rate. Payment shall be made through Cash, GCash, bank transfer, or other payment methods approved by Hotel @ Home. Reservations are not considered confirmed until payment has been received and acknowledged by the Property. Any unpaid balance and refundable security deposit must be settled upon check-in.'
+  },
+  {
+    question: 'Are visitors allowed?',
+    answer:
+      'Registered guests may receive up to four (4) visitors at a time. Visitors are allowed to stay for a maximum of 2\u20133 hours and up to 10PM only.'
+  },
+  {
     question: 'Can we cook or bring food?',
     answer:
       'Guests are welcome to bring outside food and enjoy their meals in the room or in the common area at the rooftop lounge. To help maintain the space and furnishings, cooking inside the room and at the rooftop area is not allowed. The use of portable gas stoves, induction cookers, and any personal cooking appliances is strictly prohibited. A microwave and microwavable containers are provided in the common area/rooftop lounge for re-heating of food only. If you’d like to explore local dining, Tagaytay’s restaurants and cafés are just a short drive away.'
@@ -75,7 +85,7 @@ const faqs = [
   {
     question: 'Is smoking allowed?',
     answer:
-      'Smoking and vaping is not allowed inside the rooms and in enclosed areas within the rooftop lounge. Designated open areas in the rooftop lounge are provided for smoking.'
+      'Smoking and/or vaping is not allowed in all rooms, hallways, room balconies, and indoor areas of the property. Smoking is permitted only in designated smoking areas at the rooftop balcony.'
   },
   {
     question: 'Can I host small events or workshops?',
@@ -90,7 +100,7 @@ const faqs = [
   {
     question: 'Is housekeeping provided?',
     answer:
-      'Housekeeping services are available upon request. Additional charges may apply for extended stays.'
+      'Housekeeping services are available for an additional fee and are subject to the property\'s operating schedule.'
   }
 ];
 

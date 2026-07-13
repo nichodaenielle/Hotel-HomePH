@@ -867,7 +867,7 @@ function BookNowContent() {
                         <p className="text-sm text-brand-blue/60 mt-1">Up to {room.capacity} guests</p>
                         <p className="text-xs text-brand-blue/50 mt-1">{room.features[0]}</p>
                         {room.price !== null ? (
-                          <p className="font-bold text-sm mt-3 uppercase tracking-wider text-accent">From ₱{room.price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / {room.id === 3 ? '12-hrs' : 'night'}</p>
+                          <p className="font-bold text-sm mt-3 uppercase tracking-wider text-accent" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.18)' }}>Starts at ₱{room.price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / {room.id === 3 ? '12-hrs' : 'night'}</p>
                         ) : (
                           <p className="font-bold text-sm mt-3 uppercase tracking-wider text-accent">TBA / night</p>
                         )}
