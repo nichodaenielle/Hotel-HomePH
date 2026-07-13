@@ -981,51 +981,23 @@ function BookNowContent() {
                         </div>
                         {checkIn && (
                           <>
-                            {/* Duration Selector */}
+                            {/* Duration — 12 Hours only */}
                             <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4">
-                              <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-3">Select Duration <span className="text-red-500">*</span></p>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {/* 6 Hours Option */}
-                                <button
-                                  onClick={() => { setDuration('6'); setTimeSlot(''); }}
-                                  className={`p-4 rounded-xl border text-left transition ${
-                                    duration === '6'
-                                      ? 'bg-brand-blue text-white border-brand-blue'
-                                      : 'bg-white text-brand-blue border-brand-blue/20 hover:border-brand-blue/40'
-                                  }`}
-                                >
-                                  <p className="font-bold text-lg">6 Hours</p>
-                                  <div className="mt-1 space-y-0.5 text-xs opacity-90">
-                                    <p>₱4,000 <span className="opacity-70">(Weekdays)</span></p>
-                                    <p>₱5,000 <span className="opacity-70">(Weekends)</span></p>
-                                  </div>
-                                </button>
-                                
-                                {/* 12 Hours Option */}
-                                <button
-                                  onClick={() => { setDuration('12'); setTimeSlot(''); }}
-                                  className={`p-4 rounded-xl border text-left transition ${
-                                    duration === '12'
-                                      ? 'bg-brand-blue text-white border-brand-blue'
-                                      : 'bg-white text-brand-blue border-brand-blue/20 hover:border-brand-blue/40'
-                                  }`}
-                                >
-                                  <p className="font-bold text-lg">12 Hours</p>
-                                  <div className="mt-1 space-y-0.5 text-xs opacity-90">
-                                    <p>₱8,000 <span className="opacity-70">(Weekdays)</span></p>
-                                    <p>₱10,000 <span className="opacity-70">(Weekends)</span></p>
-                                  </div>
-                                </button>
+                              <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-3">Duration</p>
+                              <div className="p-4 rounded-xl border bg-brand-blue text-white border-brand-blue text-left">
+                                <p className="font-bold text-lg">12 Hours</p>
+                                <div className="mt-1 space-y-0.5 text-xs opacity-90">
+                                  <p>₱8,000 <span className="opacity-70">(Weekdays)</span></p>
+                                  <p>₱10,000 <span className="opacity-70">(Weekends)</span></p>
+                                </div>
                               </div>
                             </div>
 
                             {/* Time Slot Selector */}
                             <div className="rounded-2xl border border-brand-blue/10 bg-brand-blue/5 p-4">
-                              <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-3">Select {duration}-Hour Time Slot <span className="text-red-500">*</span></p>
+                              <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50 mb-3">Select 12-Hour Time Slot <span className="text-red-500">*</span></p>
                               <div className="flex flex-wrap gap-2">
-                                {(duration === '6'
-                                  ? ['09:00 AM - 03:00 PM', '03:00 PM - 09:00 PM', '06:00 PM - 12:00 AM']
-                                  : ['08:00 AM - 08:00 PM', '10:00 AM - 10:00 PM', '02:00 PM - 02:00 AM']
+                                {(['08:00 AM - 08:00 PM', '10:00 AM - 10:00 PM', '02:00 PM - 02:00 AM']
                                 ).map(slot => {
                                   const isMorningSlot = slot.includes('09:00 AM') || slot.includes('08:00 AM') || slot.includes('10:00 AM');
                                   const isPrevNightBooked = checkIn ? !!dateStatuses[formatDate(addDays(checkIn, -1))] : false;
