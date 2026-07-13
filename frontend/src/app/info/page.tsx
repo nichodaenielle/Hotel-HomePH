@@ -77,7 +77,7 @@ export default function InfoPage() {
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            A Mediterranean-inspired boutique stay in the heart of Amadeo, Cavite
+            A hotel-inspired vacation rental in the heart of Amadeo, Cavite
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export default function InfoPage() {
                 Nestled in the charming town of Amadeo, Cavite, Hotel at Home was born from a dream to create a space where travelers could experience the warmth of Filipino hospitality combined with the elegance of Mediterranean design.
               </p>
               <p className="mt-6 text-base leading-8 text-brand-blue/70">
-                Our boutique hotel features carefully curated rooms that blend comfort with style. Each space is designed to provide a peaceful retreat while keeping you connected to the vibrant culture and natural beauty of the region.
+                Our vacation rental features carefully curated rooms that blend hotel-quality comfort with the warmth of a private home. Each space is designed to provide a peaceful retreat while keeping you connected to the vibrant culture and natural beauty of the region.
               </p>
             </div>
 

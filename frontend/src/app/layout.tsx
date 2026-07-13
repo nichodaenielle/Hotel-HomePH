@@ -6,7 +6,7 @@ import { ToastProvider } from '@/components/Toast';
 
 export const metadata: Metadata = {
   title: 'Hotel at Home',
-  description: 'Your Mediterranean escape in Amadeo, Cavite. Boutique hotel rooms and rooftop lounge for unforgettable stays.',
+  description: 'Your Mediterranean escape in Amadeo, Cavite. A hotel-inspired vacation rental with thoughtfully designed rooms and a rooftop lounge for unforgettable stays.',
   manifest: '/manifest.json',
 };
 

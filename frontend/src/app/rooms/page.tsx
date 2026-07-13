@@ -51,7 +51,7 @@ export default function RoomsPage() {
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
             }`}
           >
-            Experience Mediterranean luxury in our carefully designed suites, each offering a unique blend of comfort and style.
+            A hotel-inspired vacation rental in Amadeo, Cavite — thoughtfully designed spaces where every detail is curated for comfort, style, and a truly restful escape.
           </p>
         </div>
       </section>
