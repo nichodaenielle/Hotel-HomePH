@@ -410,7 +410,7 @@ function RooftopCard({ delay = 0, room }: { delay?: number; room?: any }) {
             <p>65&quot; Smart TV with Bluetooth speaker</p>
             <p>Microphone for Karaoke - available upon request</p>
             <p>Contemporary artwork</p>
-            <p>Water Dispenser</p>
+            <p>Hot and Cold Water Dispenser</p>
             <p>Microwave</p>
           </div>
         </div>

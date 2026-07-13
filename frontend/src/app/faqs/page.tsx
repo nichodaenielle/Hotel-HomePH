@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 
@@ -52,25 +52,25 @@ const faqs = [
         Dining area – Indoor and outdoor<br />
         Wine and liquor – By pre-order upon check in. Outside alcoholic drinks are subject to ₱500 corkage fee per bottle (wine/liquor)<br />
         65” Smart TV with Bluetooth speaker<br />
-        Microphone for Karaoke – by request<br />
-        Water Dispenser<br />
-        Microwave
+        Microwave<br />
+        Hot and Cold Water Dispenser<br />
+        Microphone for Karaoke - available upon request
       </>
     )
   },
   {
     question: 'Can we cook or bring food?',
     answer:
-      'Guests are welcome to bring outside food and enjoy their meals in the room or at the private rooftop lounge. To help maintain the space and furnishings, cooking inside the room and at the rooftop lounge is not allowed. If you’d like to explore local dining, Tagaytay’s restaurants and cafés are just a short drive away.'
+      'Guests are welcome to bring outside food and enjoy their meals in the room or in the common area at the rooftop lounge. To help maintain the space and furnishings, cooking inside the room and at the rooftop area is not allowed. The use of portable gas stoves, induction cookers, and any personal cooking appliances is strictly prohibited. A microwave and microwavable containers are provided in the common area/rooftop lounge for re-heating of food only. If you’d like to explore local dining, Tagaytay’s restaurants and cafés are just a short drive away.'
   },
   {
     question: 'Is breakfast included?',
-    answer: 'Yes, complimentary breakfast is included with your stay. A breakfast menu will be provided in your room, and we encourage guests to pre-order their meals ahead of time. Please also inform us of any dietary preferences or food allergies so we can prepare accordingly.'
+    answer: 'Yes. Breakfast is offered as a complimentary amenity. Should you decide not to avail of it, the accommodation rate will remain the same.'
   },
   {
     question: 'Are pets allowed?',
     answer:
-      'For the comfort and safety of all guests, pets are not allowed inside the building. However, a nearby pet hotel is available, subject to a separate fee.'
+      'Pets are not permitted inside guest rooms, hallways, or any common areas of the property. If you are traveling with a pet, a nearby pet hotel is available for your convenience at an additional cost. Please contact us for recommendations and assistance.'
   },
   {
     question: 'Is smoking allowed?',
