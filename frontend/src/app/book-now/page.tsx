@@ -1308,6 +1308,7 @@ function BookNowContent() {
                       <li>Check-out: 12:00 PM (Gold and Blue Rooms only)</li>
                       <li>Rooftop Lounge: 12-hour booking stay depending on the available and chosen time.</li>
                       <li>Late check-out subject to availability.</li>
+                      <li>Refundable security deposit of ₱3,000 upon check-in.</li>
                     </ul>
                   </div>
                   <div>

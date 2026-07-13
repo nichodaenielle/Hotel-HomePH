@@ -326,6 +326,7 @@ export default function InfoPage() {
                 <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Check-out: 12:00 PM (Gold and Blue Rooms only)</li>
                 <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Rooftop Lounge: 12-hour booking stay depending on the available and chosen time.</li>
                 <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Late check-out subject to availability.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Refundable security deposit of ₱3,000 upon check-in.</li>
               </ul>
             </div>
 
