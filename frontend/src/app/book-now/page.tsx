@@ -1352,10 +1352,23 @@ function BookNowContent() {
                   </div>
                 </div>
 
+                <div className="flex items-center gap-3">
+                  <a
+                    href="/rules/rental-agreement.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 active:scale-95"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Rental Agreement
+                  </a>
+                  <span className="text-xs text-brand-blue/50">Read before confirming your booking</span>
+                </div>
+
                 <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-brand-blue/10 bg-brand-blue/5 p-4 transition hover:border-brand-blue/30">
                   <input type="checkbox" checked={agreedToRules} onChange={(e) => setAgreedToRules(e.target.checked)} className="mt-1 h-4 w-4 rounded text-brand-blue focus:ring-brand-blue" />
                   <span className="text-sm font-medium">
-                    I have read and agree to the house rules, cancellation policy, and terms of stay.
+                    I have read and agree to the terms of stay and cancellation policy as indicated on the rental agreement.
                   </span>
                 </label>
               </div>
