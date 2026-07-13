@@ -10,7 +10,7 @@ const faqs = [
   },
   {
     question: 'Are walk-in guests allowed?',
-    answer: 'No. Prior booking is required.'
+    answer: 'Yes. Subject to availability of rooms. Please contact the designated contact numbers and official social media channels during operating hours.'
   },
   {
     question: 'How many guests can the rooms accommodate?',
@@ -25,7 +25,7 @@ const faqs = [
   {
     question: 'How far is the place from Tagaytay?',
     answer:
-      'Hotel at Home is approximately 5–15 minutes from Tagaytay, depending on traffic.'
+      'Hotel at Home is a minute away to Tagaytay boundary and approximately 5–15 minutes away to Tagaytay ridge, depending on traffic.'
   },
   {
     question: 'Is parking available?',

@@ -338,9 +338,10 @@ export default function InfoPage() {
                 General Rules
               </h3>
               <ul className="mt-4 space-y-3 text-sm text-brand-blue/70">
-                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">No smoking inside the rooms.</li>
-                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">No pets allowed.</li>
-                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Respect quiet hours (10 PM – 7 AM).</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">No smoking or vaping inside the unit, shared common areas, and hallways. Smoking and vaping area is at the rooftop balcony.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">No pets allowed in the hallways, room, and common areas. A nearby pet hotel is available for a separate fee.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">No cooking allowed.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Quiet hours: 10 PM – 7 AM.</li>
               </ul>
             </div>
 
@@ -352,8 +353,10 @@ export default function InfoPage() {
                 Cancellation Policy
               </h3>
               <ul className="mt-4 space-y-3 text-sm text-brand-blue/70">
-                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Full refund if canceled up to 4 days before check-in.</li>
-                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">50% refund if canceled 3 days or less before check-in.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80"><strong>Full Refund:</strong> Cancellations made more than 30 days before arrival.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80"><strong>Partial Refund:</strong> Cancellations made 14–30 days before arrival.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80"><strong>No Refund:</strong> Cancellations made within 14 days of arrival.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">No-shows may result in forfeiture of reservation payments.</li>
               </ul>
             </div>
 
@@ -367,7 +370,7 @@ export default function InfoPage() {
               <ul className="mt-4 space-y-3 text-sm text-brand-blue/70">
                 <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Guests are responsible for any damages.</li>
                 <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Report any issues immediately to staff.</li>
-                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Security deposit of ₱3,000 per room is required upon check-in.</li>
+                <li className="transition-colors duration-300 group-hover:text-brand-blue/80">Damages or violations incurred may be charged to the security deposit.</li>
               </ul>
             </div>
           </div>

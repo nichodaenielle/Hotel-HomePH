@@ -1314,16 +1314,19 @@ function BookNowContent() {
                   <div>
                     <h3 className="font-semibold text-brand-blue mb-2 text-base">General Rules</h3>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li>No smoking inside the rooms.</li>
-                      <li>No pets allowed.</li>
-                      <li>Respect quiet hours (10 PM – 7 AM).</li>
+                      <li>No smoking or vaping inside the unit, shared common areas, and hallways. Smoking and vaping area is at the rooftop balcony.</li>
+                      <li>No pets allowed in the hallways, room, and common areas. A nearby pet hotel is available for a separate fee.</li>
+                      <li>No cooking allowed.</li>
+                      <li>Quiet hours: 10 PM – 7 AM.</li>
                     </ul>
                   </div>
                   <div>
                     <h3 className="font-semibold text-brand-blue mb-2 text-base">Cancellation Policy</h3>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li>Full refund if canceled up to 4 days before check-in.</li>
-                      <li>50% refund if canceled 3 days or less before check-in.</li>
+                      <li><strong>Full Refund:</strong> Cancellations made more than 30 days before arrival.</li>
+                      <li><strong>Partial Refund:</strong> Cancellations made 14–30 days before arrival.</li>
+                      <li><strong>No Refund:</strong> Cancellations made within 14 days of arrival.</li>
+                      <li>No-shows may result in forfeiture of reservation payments.</li>
                     </ul>
                   </div>
                   <div>
@@ -1331,7 +1334,7 @@ function BookNowContent() {
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Guests are responsible for any damages.</li>
                       <li>Report any issues immediately to staff.</li>
-                      <li>Security deposit of ₱3,000 per room is required upon check-in.</li>
+                      <li>Damages or violations incurred may be charged to the security deposit.</li>
                     </ul>
                   </div>
                 </div>
