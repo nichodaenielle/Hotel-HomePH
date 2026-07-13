@@ -795,11 +795,11 @@ function BookNowContent() {
             </button>
             <h3 className="text-xl font-semibold text-brand-blue mb-4">Scan to Pay</h3>
             <div className="w-full aspect-[3/4] flex justify-center rounded-xl bg-slate-50 mb-6 overflow-hidden border border-brand-blue/10 relative">
-              <Image src={paymentDetails.method === 'gcash' ? '/img/payment/gcash.jpg' : '/img/payment/bpi.jpg'} alt="QR Code Full" fill className="object-contain" sizes="(max-width: 768px) 100vw, 400px" priority />
+              <Image src={paymentDetails.method === 'gcash' ? '/img/payment/gcash.png' : '/img/payment/bpi.png'} alt="QR Code Full" fill className="object-contain" sizes="(max-width: 768px) 100vw, 400px" priority />
             </div>
             <a 
-              href={paymentDetails.method === 'gcash' ? '/img/payment/gcash.jpg' : '/img/payment/bpi.jpg'}
-              download={paymentDetails.method === 'gcash' ? 'HotelAtHome_GCash_QR.jpg' : 'HotelAtHome_BPI_QR.jpg'}
+              href={paymentDetails.method === 'gcash' ? '/img/payment/gcash.png' : '/img/payment/bpi.png'}
+              download={paymentDetails.method === 'gcash' ? 'HotelAtHome_GCash_QR.png' : 'HotelAtHome_BPI_QR.png'}
               className="inline-flex w-full justify-center items-center gap-2 rounded-full bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#001a72] shadow-sm"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -1229,7 +1229,7 @@ function BookNowContent() {
                       className="w-32 h-32 flex-shrink-0 bg-slate-50 rounded-xl overflow-hidden border border-brand-blue/10 shadow-sm relative group cursor-pointer"
                       onClick={() => setViewQrFullscreen(true)}
                     >
-                      <Image src="/img/payment/gcash.jpg" alt="GCash QR Code" fill className="object-cover transition duration-300 group-hover:scale-105" sizes="128px" priority />
+                      <Image src="/img/payment/gcash.png" alt="GCash QR Code" fill className="object-cover transition duration-300 group-hover:scale-105" sizes="128px" priority />
                       <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
                         <svg className="w-8 h-8 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
                       </div>
@@ -1250,7 +1250,7 @@ function BookNowContent() {
                       className="w-32 h-32 flex-shrink-0 bg-slate-50 rounded-xl overflow-hidden border border-brand-blue/10 shadow-sm relative group cursor-pointer"
                       onClick={() => setViewQrFullscreen(true)}
                     >
-                      <Image src="/img/payment/bpi.jpg" alt="BPI QR Code" fill className="object-cover transition duration-300 group-hover:scale-105" sizes="128px" priority />
+                      <Image src="/img/payment/bpi.png" alt="BPI QR Code" fill className="object-cover transition duration-300 group-hover:scale-105" sizes="128px" priority />
                       <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
                         <svg className="w-8 h-8 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
                       </div>
