@@ -126,7 +126,6 @@ function GoldRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
   };
 
   const price = room?.price || 4800;
-  const weekendPrice = room?.weekend_price || 5300;
 
   return (
     <article 
@@ -177,7 +176,8 @@ function GoldRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
       </div>
       <div className="space-y-6 p-8">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60">₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/night (Weekdays) • ₱{weekendPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Weekends)</p>
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60">Starts at ₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/night</p>
+          <p className="text-xs text-brand-blue/50 mt-1">+₱500 weekends/holidays • +₱200–500 peak season</p>
         </div>
         <div className="grid gap-2 text-sm text-brand-blue/70 sm:grid-cols-2">
           <div className="space-y-2">
@@ -226,8 +226,7 @@ function BlueRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
     setCurrentIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
   };
 
-  const price = room?.price || 4800;
-  const weekendPrice = room?.weekend_price || 5300;
+  const price = room?.price || 5300;
 
   return (
     <article 
@@ -277,7 +276,8 @@ function BlueRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
       </div>
       <div className="space-y-6 p-8">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60">₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/night (Weekdays) • ₱{weekendPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (Weekends)</p>
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-blue/60">Starts at ₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/night</p>
+          <p className="text-xs text-brand-blue/50 mt-1">+₱500 weekends/holidays • +₱200–500 peak season</p>
         </div>
         <div className="grid gap-2 text-sm text-brand-blue/70 sm:grid-cols-2">
           <div className="space-y-2">
@@ -383,12 +383,11 @@ function RooftopCard({ delay = 0, room }: { delay?: number; room?: any }) {
           <div className="mt-3 space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-blue/50">Pricing</p>
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-              <span className="text-brand-blue"><span className="font-bold">₱{price6hr.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 6 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
-              <span className="text-brand-blue"><span className="font-bold">₱{weekendPrice6hr.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 6 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
+              <span className="text-brand-blue">Starts at <span className="font-bold">₱{price6hr.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 6 hrs</span>
+              <span className="text-brand-blue">Starts at <span className="font-bold">₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 12 hrs</span>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-              <span className="text-brand-blue"><span className="font-bold">₱{price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 12 hrs <span className="text-brand-blue/50">(Weekdays)</span></span>
-              <span className="text-brand-blue"><span className="font-bold">₱{weekendPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> / 12 hrs <span className="text-brand-blue/50">(Weekends)</span></span>
+              <span className="text-brand-blue/60 text-xs">+₱1,000 weekends/holidays (6hr) &bull; +₱2,000 (12hr) &bull; +₱500–1,000 peak season</span>
             </div>
           </div>
         </div>

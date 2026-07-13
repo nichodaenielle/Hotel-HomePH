@@ -22,7 +22,7 @@ export default function Home() {
   };
 
   const today = new Date().toISOString().slice(0, 10);
-  const minCheckInDate = addDays(today, 3);
+  const minCheckInDate = today;
 
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');

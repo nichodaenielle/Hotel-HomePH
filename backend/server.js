@@ -172,6 +172,7 @@ app.post('/api/bookings', async (req, res) => {
     try {
       await conn.beginTransaction();
 
+      // 1. Lock existing bookings to prevent double-booking race conditions.
       const conflicts = await availability.findConflicts(conn, {
         roomId,
         start: window.start,
@@ -179,11 +180,27 @@ app.post('/api/bookings', async (req, res) => {
         forUpdate: true
       });
 
-      if (conflicts.length > 0) {
+      // 2. For Rooftop, also enforce weekend/holiday auto-blocks (room rentals
+      //    Gold/Blue are not auto-blocked so they retain priority).
+      let autoBlocked = [];
+      if (conflicts.length === 0 && Number(roomId) === availability.ROOFTOP_ID) {
+        const startDate = availability.datePart(window.start);
+        const endDate = availability.datePart(window.end) || startDate;
+        const outDate = availability.addDays(endDate, -1);
+        autoBlocked = await availability.findAutoBlockedDates(conn, roomId, startDate, outDate);
+      }
+
+      if (conflicts.length > 0 || autoBlocked.length > 0) {
         await conn.rollback();
+        const realConflicts = conflicts.map(c => c.confirmation_code);
+        const autoBlockReasons = autoBlocked.map(b => b.reason);
+        let message = 'These dates have just been booked. Please select different dates.';
+        if (autoBlocked.length > 0) {
+          message = 'Rooftop is blocked on weekends and legal holidays. Please select a different date.';
+        }
         return res.status(409).json({
-          error: 'These dates have just been booked. Please select different dates.',
-          conflicts: conflicts.map(c => c.confirmation_code)
+          error: message,
+          conflicts: [...realConflicts, ...autoBlockReasons]
         });
       }
 
@@ -531,6 +548,11 @@ app.get('/api/bookings/dates/:roomId', async (req, res) => {
     const { roomId } = req.params;
     const { startDate, endDate } = req.query;
 
+    // Determine date range for auto-block generation (defaults cover a wide window)
+    const today = new Date().toISOString().split('T')[0];
+    const rangeStart = startDate || availability.addDays(today, -30);
+    const rangeEnd = endDate || availability.addDays(today, 365);
+
     // Fetch all non-cancelled bookings for the room (or all rooms if Rooftop)
     let query = "SELECT id, room_id, confirmation_code, check_in, check_out, status FROM bookings WHERE status != 'cancelled'";
     let queryParams = [];
@@ -586,6 +608,31 @@ app.get('/api/bookings/dates/:roomId', async (req, res) => {
         current.setDate(current.getDate() + 1);
       }
     });
+
+    // Rooftop is auto-blocked on weekend and legal-holiday nights unless an
+    // admin explicitly unblocks the date. Room rentals are not auto-blocked.
+    if (parseInt(roomId) === 3) {
+      const autoBlocked = await availability.findAutoBlockedDates(pool, roomId, rangeStart, rangeEnd);
+      autoBlocked.forEach(b => {
+        const dateKey = b.date;
+        if (!bookingsByDate[dateKey]) {
+          bookingsByDate[dateKey] = [];
+        }
+        // Avoid duplicate synthetic blocks on the same date
+        if (!bookingsByDate[dateKey].some(x => x.isAutoBlock)) {
+          bookingsByDate[dateKey].push({
+            id: null,
+            roomId: 3,
+            confirmationCode: b.reason,
+            checkIn: `${b.date} ${availability.DEFAULT_CHECKIN_TIME}`,
+            checkOut: `${availability.addDays(b.date, 1)} ${availability.DEFAULT_CHECKOUT_TIME}`,
+            status: 'confirmed',
+            isRooftopBlock: false,
+            isAutoBlock: true
+          });
+        }
+      });
+    }
 
     res.json(bookingsByDate);
   } catch (error) {
@@ -676,6 +723,117 @@ app.post('/api/admin/block-dates', async (req, res) => {
   } catch (error) {
     console.error('Error blocking dates:', error);
     res.status(500).json({ error: 'Failed to block dates.' });
+  }
+});
+
+// Admin Dashboard: List all legal holidays
+app.get('/api/admin/holidays', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, holiday_date, name, created_at FROM holidays ORDER BY holiday_date ASC'
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching holidays:', error);
+    res.status(500).json({ error: 'Failed to fetch holidays' });
+  }
+});
+
+// Admin Dashboard: Add a legal holiday
+app.post('/api/admin/holidays', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const { holidayDate, name } = req.body || {};
+  if (!holidayDate || !name) {
+    return res.status(400).json({ error: 'holidayDate and name are required.' });
+  }
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO holidays (holiday_date, name) VALUES (?, ?)',
+      [holidayDate, name]
+    );
+    res.status(201).json({ success: true, id: result.insertId, holidayDate, name });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Holiday already exists for this date.' });
+    }
+    console.error('Error creating holiday:', error);
+    res.status(500).json({ error: 'Failed to create holiday' });
+  }
+});
+
+// Admin Dashboard: Delete a legal holiday
+app.delete('/api/admin/holidays/:id', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM holidays WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Holiday deleted.' });
+  } catch (error) {
+    console.error('Error deleting holiday:', error);
+    res.status(500).json({ error: 'Failed to delete holiday' });
+  }
+});
+
+// Admin Dashboard: List calendar overrides for a room/date range
+app.get('/api/admin/calendar-overrides', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const { roomId, startDate, endDate } = req.query;
+  try {
+    let sql = 'SELECT id, override_date, room_id, override_type, reason, created_at FROM calendar_overrides WHERE 1=1';
+    const params = [];
+    if (roomId) {
+      sql += ' AND room_id = ?';
+      params.push(roomId);
+    }
+    if (startDate && endDate) {
+      sql += ' AND override_date BETWEEN ? AND ?';
+      params.push(startDate, endDate);
+    }
+    sql += ' ORDER BY override_date ASC';
+    const [rows] = await pool.query(sql, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching calendar overrides:', error);
+    res.status(500).json({ error: 'Failed to fetch overrides' });
+  }
+});
+
+// Admin Dashboard: Create a calendar override (block/unblock)
+app.post('/api/admin/calendar-overrides', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const { overrideDate, roomId, overrideType, reason } = req.body || {};
+  if (!overrideDate || !roomId || !overrideType) {
+    return res.status(400).json({ error: 'overrideDate, roomId and overrideType are required.' });
+  }
+  if (!['block', 'unblock'].includes(overrideType)) {
+    return res.status(400).json({ error: 'overrideType must be block or unblock.' });
+  }
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO calendar_overrides (override_date, room_id, override_type, reason) VALUES (?, ?, ?, ?)',
+      [overrideDate, roomId, overrideType, reason || null]
+    );
+    res.status(201).json({ success: true, id: result.insertId, overrideDate, roomId, overrideType, reason });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'An override of this type already exists for this date/room.' });
+    }
+    console.error('Error creating calendar override:', error);
+    res.status(500).json({ error: 'Failed to create override' });
+  }
+});
+
+// Admin Dashboard: Delete a calendar override
+app.delete('/api/admin/calendar-overrides/:id', async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM calendar_overrides WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Override deleted.' });
+  } catch (error) {
+    console.error('Error deleting calendar override:', error);
+    res.status(500).json({ error: 'Failed to delete override' });
   }
 });
 

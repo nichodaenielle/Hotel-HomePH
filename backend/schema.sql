@@ -53,3 +53,24 @@ CREATE TABLE IF NOT EXISTS booking_history (
   INDEX idx_booking_id (booking_id),
   INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Legal holidays table (2 nights per holiday are categorized as holiday nights)
+CREATE TABLE IF NOT EXISTS holidays (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  holiday_date DATE NOT NULL UNIQUE,
+  name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Manual calendar overrides per room/date (block/unblock)
+CREATE TABLE IF NOT EXISTS calendar_overrides (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  override_date DATE NOT NULL,
+  room_id INT NOT NULL,
+  override_type ENUM('block', 'unblock') NOT NULL DEFAULT 'block',
+  reason VARCHAR(255) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_date_room_type (override_date, room_id, override_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

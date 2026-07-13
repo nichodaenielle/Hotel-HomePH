@@ -63,6 +63,85 @@ function addDays(dateStr, days) {
   return d.toISOString().slice(0, 10);
 }
 
+// Weekend nights: Friday (check-in) → Saturday (check-out)
+// and Saturday (check-in) → Sunday (check-out).
+function isWeekendNight(dateStr) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  const day = d.getUTCDay();
+  return day === 5 || day === 6; // Friday or Saturday
+}
+
+// A legal holiday creates two holiday nights:
+//   holiday_date - 1 (check-in) → holiday_date (check-out)
+//   holiday_date (check-in) → holiday_date + 1 (check-out)
+async function getHolidayNights(executor, startDate, endDate) {
+  const [rows] = await executor.query(
+    `SELECT holiday_date, name FROM holidays
+      WHERE holiday_date BETWEEN DATE_SUB(?, INTERVAL 1 DAY) AND ?`,
+    [startDate, endDate]
+  );
+  const nights = new Map();
+  rows.forEach(h => {
+    const prev = addDays(h.holiday_date, -1);
+    const curr = h.holiday_date;
+    if (prev >= startDate && prev <= endDate) {
+      nights.set(prev, h.name);
+    }
+    if (curr >= startDate && curr <= endDate) {
+      nights.set(curr, h.name);
+    }
+  });
+  return nights;
+}
+
+async function getCalendarOverrides(executor, roomId, startDate, endDate) {
+  const [rows] = await executor.query(
+    `SELECT override_date, override_type, reason FROM calendar_overrides
+      WHERE room_id = ? AND override_date BETWEEN ? AND ?`,
+    [Number(roomId), startDate, endDate]
+  );
+  const blocks = new Map();
+  const unblocks = new Map();
+  rows.forEach(r => {
+    if (r.override_type === 'block') blocks.set(r.override_date, r.reason);
+    else unblocks.set(r.override_date, r.reason);
+  });
+  return { blocks, unblocks };
+}
+
+// Generate a date range (inclusive) between two date strings.
+function dateRange(startDate, endDate) {
+  const dates = [];
+  let current = startDate;
+  while (current <= endDate) {
+    dates.push(current);
+    current = addDays(current, 1);
+  }
+  return dates;
+}
+
+// Return dates that are auto-blocked for a room due to weekend/holiday rules.
+// Only Rooftop (3) has weekend/holiday auto-blocks; Gold/Blue do not.
+async function findAutoBlockedDates(executor, roomId, startDate, endDate) {
+  if (Number(roomId) !== ROOFTOP_ID) return [];
+  const holidayNights = await getHolidayNights(executor, startDate, endDate);
+  const { unblocks } = await getCalendarOverrides(executor, roomId, startDate, endDate);
+  const blocked = [];
+  dateRange(startDate, endDate).forEach(dateStr => {
+    const isAutoBlock = isWeekendNight(dateStr) || holidayNights.has(dateStr);
+    if (!isAutoBlock) return;
+    if (unblocks.has(dateStr)) return; // admin explicitly unblocked
+    blocked.push({
+      date: dateStr,
+      reason: holidayNights.get(dateStr)
+        ? `Legal Holiday: ${holidayNights.get(dateStr)}`
+        : 'Weekend (Rooftop priority)',
+      isAutoBlock: true
+    });
+  });
+  return blocked;
+}
+
 /**
  * Resolve the standard check-in/check-out times for a room.
  * Gold/Blue always use fixed times. Rooftop may supply slot times.
@@ -161,17 +240,42 @@ async function checkAvailability(executor, { roomId, checkIn, checkOut, checkInT
   const conflicts = await findConflicts(executor, {
     roomId, start: window.start, end: window.end, excludeId
   });
+
+  // Rooftop is auto-blocked on weekend and legal-holiday nights unless the
+  // admin explicitly unblocks the date. Room rentals (Gold/Blue) are not
+  // auto-blocked so they retain priority.
+  let autoBlocked = [];
+  if (conflicts.length === 0 && Number(roomId) === ROOFTOP_ID) {
+    const startDate = datePart(window.start);
+    const endDate = datePart(window.end) || startDate;
+    const outDate = addDays(endDate, -1);
+    autoBlocked = await findAutoBlockedDates(executor, roomId, startDate, outDate);
+  }
+
+  const allConflicts = conflicts.map(c => ({
+    confirmationCode: c.confirmation_code,
+    roomId: c.room_id,
+    checkIn: c.check_in,
+    checkOut: c.check_out,
+    status: c.status
+  }));
+
+  if (autoBlocked.length > 0) {
+    allConflicts.push(...autoBlocked.map(b => ({
+      confirmationCode: b.reason,
+      roomId: ROOFTOP_ID,
+      checkIn: `${b.date} ${DEFAULT_CHECKIN_TIME}`,
+      checkOut: `${addDays(b.date, 1)} ${DEFAULT_CHECKOUT_TIME}`,
+      status: 'confirmed',
+      isAutoBlock: true
+    })));
+  }
+
   return {
-    available: conflicts.length === 0,
+    available: allConflicts.length === 0,
     window,
     bufferMinutes: bufferForRoom(roomId),
-    conflicts: conflicts.map(c => ({
-      confirmationCode: c.confirmation_code,
-      roomId: c.room_id,
-      checkIn: c.check_in,
-      checkOut: c.check_out,
-      status: c.status
-    }))
+    conflicts: allConflicts
   };
 }
 
@@ -183,5 +287,11 @@ module.exports = {
   buildWindow,
   findConflicts,
   checkAvailability,
-  bufferForRoom
+  bufferForRoom,
+  isWeekendNight,
+  getHolidayNights,
+  getCalendarOverrides,
+  findAutoBlockedDates,
+  datePart,
+  addDays
 };

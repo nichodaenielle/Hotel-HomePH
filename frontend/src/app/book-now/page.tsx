@@ -30,6 +30,37 @@ const roomStaticData = {
   }
 };
 
+// --- PRICING HELPERS ---
+
+// Peak season add-on per night for rooms (Gold/Blue) and Rooftop
+// Rooms: Oct/Nov = +200, Dec/Jan/Feb = +500
+// Rooftop 12hr: Oct/Nov = +500, Dec/Jan/Feb = +1000
+// Rooftop 6hr: Oct/Nov = +250, Dec/Jan/Feb = +500
+function getPeakSeasonAddon(month: number, roomId: number | null, duration: '6' | '12' = '12'): number {
+  if (roomId === 3) {
+    // Rooftop
+    if (month === 10 || month === 11) return duration === '6' ? 250 : 500;
+    if (month === 12 || month === 1 || month === 2) return duration === '6' ? 500 : 1000;
+    return 0;
+  } else {
+    // Gold / Blue rooms
+    if (month === 10 || month === 11) return 200;
+    if (month === 12 || month === 1 || month === 2) return 500;
+    return 0;
+  }
+}
+
+// Check if a date string (YYYY-MM-DD) falls on a holiday night.
+// A holiday stored as holiday_date produces two nights:
+//   (holiday_date - 1) and holiday_date itself.
+function isHolidayNight(dateStr: string, holidayDates: string[]): boolean {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  const next = new Date(d);
+  next.setUTCDate(next.getUTCDate() + 1);
+  const nextStr = next.toISOString().slice(0, 10);
+  return holidayDates.includes(dateStr) || holidayDates.includes(nextStr);
+}
+
 // --- HELPER FUNCTIONS ---
 const formatDate = (date: Date) => {
   const y = date.getFullYear();
@@ -82,9 +113,9 @@ function SmartCalendar({
 }) {
   const [currentMonth, setCurrentMonth] = useState(getStartOfDay(new Date()));
 
-  // Buffer calculation: Soonest check-in is 3 days from today
+  // Same-day bookings are allowed; only past dates are disabled.
   const today = getStartOfDay(new Date());
-  const minDate = addDays(today, 3);
+  const minDate = today;
 
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
@@ -189,6 +220,9 @@ function SmartCalendar({
       let tooltipText = "";
       if (isNightBooked && !isPastOrBuffer) {
         const bookingDetails = bookings.map(b => {
+          if (b.isAutoBlock) {
+            return `${b.confirmationCode || 'Auto-block'}`;
+          }
           const checkInTime = new Date(b.checkIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
           const checkOutTime = new Date(b.checkOut).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
           const roomName = b.roomId === 1 ? 'Gold Room' : b.roomId === 2 ? 'Blue Room' : 'Rooftop';
@@ -360,6 +394,7 @@ function BookNowContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateStatuses, setDateStatuses] = useState<Record<string, any[]>>({});
   const [viewQrFullscreen, setViewQrFullscreen] = useState(false);
+  const [holidayDates, setHolidayDates] = useState<string[]>([]);
 
   // Check availability when room changes and dates are already selected
   useEffect(() => {
@@ -467,6 +502,23 @@ function BookNowContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentStep, bookingConfirmed]);
 
+  // Fetch legal holidays for pricing
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const res = await fetch(`${apiUrl}/api/admin/holidays`);
+        if (res.ok) {
+          const data = await res.json();
+          setHolidayDates((data as any[]).map((h: any) => h.holiday_date?.slice(0, 10) || String(h.holiday_date).slice(0, 10)));
+        }
+      } catch (e) {
+        console.error('Failed to fetch holidays for pricing:', e);
+      }
+    };
+    fetchHolidays();
+  }, []);
+
   // Fetch rooms from backend API
   useEffect(() => {
     const fetchRooms = async () => {
@@ -534,25 +586,39 @@ function BookNowContent() {
   let roomTotal = null;
   if (selectedRoom && selectedRoom.price !== null) {
     if (selectedRoomId === 3) {
-      // Rooftop Lounge pricing based on duration
-      const isWeekend = checkIn ? (checkIn.getDay() === 5 || checkIn.getDay() === 6) : false;
+      // Rooftop Lounge: single-slot pricing
+      const checkInDate = checkIn ? formatDate(checkIn) : null;
+      const checkInDay = checkIn ? checkIn.getDay() : -1;
+      const isWeekendNight = checkInDay === 5 || checkInDay === 6;
+      const isHoliday = checkInDate ? isHolidayNight(checkInDate, holidayDates) : false;
+      const isWeekendOrHoliday = isWeekendNight || isHoliday;
+      const checkInMonth = checkIn ? checkIn.getMonth() + 1 : 0;
+      const peakAddon = getPeakSeasonAddon(checkInMonth, 3, duration);
+
       if (duration === '6') {
-        roomTotal = isWeekend ? (selectedRoom.weekendPrice6Hour || 4000) : (selectedRoom.price6Hour || 2000);
+        const base6hr = selectedRoom.price6Hour || 4000;
+        const weekend6hrAddon = 1000;
+        roomTotal = base6hr + (isWeekendOrHoliday ? weekend6hrAddon : 0) + peakAddon;
       } else {
-        roomTotal = isWeekend ? (selectedRoom.weekendPrice || 10000) : (selectedRoom.price || 8000);
+        const base12hr = selectedRoom.price || 8000;
+        const weekend12hrAddon = 2000;
+        roomTotal = base12hr + (isWeekendOrHoliday ? weekend12hrAddon : 0) + peakAddon;
       }
     } else if (nights > 0 && checkIn) {
+      // Gold / Blue rooms: per-night calculation
       roomTotal = 0;
+      const weekendOrHolidayAddon = 500;
       for (let i = 0; i < nights; i++) {
         const currentDate = new Date(checkIn);
         currentDate.setDate(currentDate.getDate() + i);
-        const dayOfWeek = currentDate.getDay(); // 0 is Sunday, 5 is Friday, 6 is Saturday
-        // Calculate Weekends as Friday and Saturday nights
-        if (dayOfWeek === 5 || dayOfWeek === 6) {
-          roomTotal += selectedRoom.weekendPrice || selectedRoom.price;
-        } else {
-          roomTotal += selectedRoom.price;
-        }
+        const dayOfWeek = currentDate.getDay();
+        const dateStr = formatDate(currentDate);
+        const nightIsWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+        const nightIsHoliday = isHolidayNight(dateStr, holidayDates);
+        const nightIsWeekendOrHoliday = nightIsWeekend || nightIsHoliday;
+        const month = currentDate.getMonth() + 1;
+        const peakAddon = getPeakSeasonAddon(month, selectedRoomId);
+        roomTotal += selectedRoom.price + (nightIsWeekendOrHoliday ? weekendOrHolidayAddon : 0) + peakAddon;
       }
     } else {
       roomTotal = selectedRoom.price;
@@ -831,7 +897,7 @@ function BookNowContent() {
               <div className="space-y-8">
                 <div>
                   <h2 className="text-2xl font-semibold">Choose Your Dates</h2>
-                  <p className="text-sm text-brand-blue/60 mt-1">Select your check-in and check-out dates. Earliest check-in starts 3 days from today.</p>
+                  <p className="text-sm text-brand-blue/60 mt-1">Select your check-in and check-out dates. Same-day bookings are allowed.</p>
                   <div className="mt-3 flex items-center gap-4 text-xs text-brand-blue/60">
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-red-400"></span>

@@ -160,6 +160,10 @@ header("Pragma: no-cache");
         }
         .calendar-day.past { opacity: 0.5; background: #f8fafc; }
         .calendar-day.weekend { background: linear-gradient(135deg, #fefce8 0%, #ffffff 100%); }
+        .calendar-day.holiday { background: linear-gradient(135deg, #fce7f3 0%, #ffffff 100%); }
+        .calendar-day.unblocked { border: 2px dashed #22c55e; }
+        .calendar-day-indicator { position: absolute; top: 6px; right: 6px; font-size: 10px; }
+        .calendar-day { position: relative; }
         
         .calendar-date { 
             font-size: 14px; 
@@ -1004,7 +1008,13 @@ header("Pragma: no-cache");
             <div id="pricing-section" style="display: none; flex: 1; flex-direction: column; min-height: 0; overflow-y: auto;">
                 <div class="availability-header">
                     <h2 style="margin: 0 0 8px 0; font-size: 24px; color: #011478;">Room Pricing Management</h2>
-                    <p style="margin: 0; color: rgba(1, 20, 120, 0.6); font-size: 14px;">Manage pricing for all room types</p>
+                    <p style="margin: 0; color: rgba(1, 20, 120, 0.6); font-size: 14px;">Manage base pricing for all room types. Weekend/holiday add-ons and peak season surcharges are computed automatically.</p>
+                    <div style="margin-top: 10px; padding: 10px 14px; background: rgba(1,20,120,0.05); border-radius: 10px; font-size: 12px; color: rgba(1,20,120,0.7); line-height: 1.6;">
+                        <strong>Auto Add-ons (on top of base price):</strong><br>
+                        Rooms: +₱500/night on weekends &amp; holidays &bull; Oct/Nov +₱200 &bull; Dec/Jan/Feb +₱500<br>
+                        Rooftop 12hr: +₱2,000 on weekends &amp; holidays &bull; Oct/Nov +₱500 &bull; Dec/Jan/Feb +₱1,000<br>
+                        Rooftop 6hr: +₱1,000 on weekends &amp; holidays &bull; Oct/Nov +₱250 &bull; Dec/Jan/Feb +₱500
+                    </div>
                 </div>
                 
                 <div class="room-avail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
@@ -1018,8 +1028,8 @@ header("Pragma: no-cache");
                                     <input type="number" id="gold-price" class="login-input" value="4800" style="padding: 10px 12px;">
                                 </div>
                                 <div>
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Weekend Price (₱)</label>
-                                    <input type="number" id="gold-weekend-price" class="login-input" value="5300" style="padding: 10px 12px;">
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Base Weekend Price (₱) <span style="font-weight:400;">(before add-ons)</span></label>
+                                    <input type="number" id="gold-weekend-price" class="login-input" value="4800" style="padding: 10px 12px;"><!-- Same as weekday; add-ons applied in code -->
                                 </div>
                                 <button onclick="updateRoomPricing(1)" class="btn-submit" style="margin-top: 10px;">Update Gold Room Pricing</button>
                             </div>
@@ -1033,11 +1043,11 @@ header("Pragma: no-cache");
                             <div style="display: grid; gap: 15px;">
                                 <div>
                                     <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Weekday Price (₱)</label>
-                                    <input type="number" id="blue-price" class="login-input" value="4800" style="padding: 10px 12px;">
+                                    <input type="number" id="blue-price" class="login-input" value="5300" style="padding: 10px 12px;">
                                 </div>
                                 <div>
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Weekend Price (₱)</label>
-                                    <input type="number" id="blue-weekend-price" class="login-input" value="5300" style="padding: 10px 12px;">
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Base Weekend Price (₱) <span style="font-weight:400;">(before add-ons)</span></label>
+                                    <input type="number" id="blue-weekend-price" class="login-input" value="5300" style="padding: 10px 12px;"><!-- Same as weekday; add-ons applied in code -->
                                 </div>
                                 <button onclick="updateRoomPricing(2)" class="btn-submit" style="margin-top: 10px;">Update Blue Room Pricing</button>
                             </div>
@@ -1050,22 +1060,35 @@ header("Pragma: no-cache");
                             <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #011478; font-weight: 600;">Rooftop Lounge</h3>
                             <div style="display: grid; gap: 15px;">
                                 <div>
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">12-Hour Weekday (₱)</label>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Base 12-Hour Price (₱) <span style="font-weight:400;">(before add-ons)</span></label>
                                     <input type="number" id="rooftop-price" class="login-input" value="8000" style="padding: 10px 12px;">
+                                    <p style="margin: 4px 0 0 0; font-size: 11px; color: rgba(1,20,120,0.5);">Weekend/holiday: +₱2,000 &bull; Oct/Nov: +₱500 &bull; Dec/Jan/Feb: +₱1,000</p>
                                 </div>
                                 <div>
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">12-Hour Weekend (₱)</label>
-                                    <input type="number" id="rooftop-weekend-price" class="login-input" value="10000" style="padding: 10px 12px;">
-                                </div>
-                                <div>
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">6-Hour Weekday (₱)</label>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">Base 6-Hour Price (₱) <span style="font-weight:400;">(before add-ons)</span></label>
                                     <input type="number" id="rooftop-price-6hr" class="login-input" value="4000" style="padding: 10px 12px;">
+                                    <p style="margin: 4px 0 0 0; font-size: 11px; color: rgba(1,20,120,0.5);">Weekend/holiday: +₱1,000 &bull; Oct/Nov: +₱250 &bull; Dec/Jan/Feb: +₱500</p>
                                 </div>
-                                <div>
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: rgba(1, 20, 120, 0.6); margin-bottom: 6px;">6-Hour Weekend (₱)</label>
-                                    <input type="number" id="rooftop-weekend-price-6hr" class="login-input" value="5000" style="padding: 10px 12px;">
-                                </div>
-                                <button onclick="updateRoomPricing(3)" class="btn-submit" style="margin-top: 10px;">Update Rooftop Pricing</button>
+                                <!-- Hidden inputs so updateRoomPricing(3) still sends weekendPrice fields (set equal to base) -->
+                                <input type="hidden" id="rooftop-weekend-price" value="8000">
+                                <input type="hidden" id="rooftop-weekend-price-6hr" value="4000">
+                                <button onclick="syncRooftopWeekendPricesAndUpdate()" class="btn-submit" style="margin-top: 10px;">Update Rooftop Pricing</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legal Holidays Management -->
+                    <div class="room-avail-card">
+                        <div style="padding: 20px;">
+                            <h3 style="margin: 0 0 15px 0; font-size: 18px; color: #011478; font-weight: 600;">Legal Holidays</h3>
+                            <p style="margin: 0 0 12px 0; font-size: 13px; color: rgba(1,20,120,0.6);">Each holiday categorizes 2 nights as holiday nights.</p>
+                            <div style="display: grid; gap: 12px; margin-bottom: 16px;">
+                                <input type="date" id="holiday-date" class="login-input" style="padding: 10px 12px;">
+                                <input type="text" id="holiday-name" class="login-input" placeholder="e.g. Bonifacio Day" style="padding: 10px 12px;">
+                                <button onclick="addHoliday()" class="btn-submit">Add Holiday</button>
+                            </div>
+                            <div id="holidays-list" style="max-height: 240px; overflow-y: auto;">
+                                <!-- Generated by JS -->
                             </div>
                         </div>
                     </div>
@@ -1392,6 +1415,14 @@ header("Pragma: no-cache");
                     <div class="calendar-legend-dot today"></div>
                     <span>Today</span>
                 </div>
+                <div class="calendar-legend-item">
+                    <span style="font-size: 14px;">🌸</span>
+                    <span>Holiday</span>
+                </div>
+                <div class="calendar-legend-item">
+                    <span style="font-size: 14px; border: 2px dashed #22c55e; border-radius: 4px; width: 14px; height: 14px; display: inline-block;"></span>
+                    <span>Unblocked</span>
+                </div>
                 <button class="btn-modal btn-modal-cancel" onclick="closeCalendarModal()" style="margin-left: auto;">Close</button>
             </div>
         </div>
@@ -1484,6 +1515,8 @@ header("Pragma: no-cache");
         let currentApiKey = sessionStorage.getItem('admin_pwd') || '';
         let allBookingsData = []; // Store raw bookings for search/filtering
         let filteredBookingsData = []; // Store current filtered list for exports and dashboard
+        let holidaysData = []; // Legal holidays
+        let overridesData = []; // Calendar overrides (block/unblock)
         let isCalendarVisible = false;
         let currentCalDate = new Date();
         let currentSortColumn = null;
@@ -2640,10 +2673,62 @@ header("Pragma: no-cache");
             showToast('success', `Exported ${dataToExport.length} bookings to CSV`);
         }
 
-        function openCalendarModal() {
+        async function openCalendarModal() {
             isCalendarVisible = true;
             document.getElementById('calendar-modal').style.display = 'flex';
+            await loadHolidaysAndOverrides();
             renderCalendar();
+        }
+
+        async function loadHolidaysAndOverrides() {
+            try {
+                const headers = { 'x-api-key': currentApiKey };
+                const [holidaysRes, overridesRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/admin/holidays`, { headers }),
+                    fetch(`${API_BASE_URL}/admin/calendar-overrides?roomId=3`, { headers })
+                ]);
+                if (holidaysRes.ok) holidaysData = await holidaysRes.json();
+                if (overridesRes.ok) overridesData = await overridesRes.json();
+            } catch (e) {
+                console.error('Failed to load calendar metadata:', e);
+            }
+        }
+
+        // A weekend night is Friday (Fri→Sat) or Saturday (Sat→Sun).
+        function isWeekendNightAdmin(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            const day = d.getDay();
+            return day === 5 || day === 6;
+        }
+
+        // A legal holiday creates two holiday nights.
+        function getHolidayNameForNight(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            for (const h of holidaysData) {
+                const holiday = new Date(h.holiday_date + 'T00:00:00');
+                const prev = new Date(holiday);
+                prev.setDate(prev.getDate() - 1);
+                if (d.getTime() === holiday.getTime() || d.getTime() === prev.getTime()) {
+                    return h.name;
+                }
+            }
+            return null;
+        }
+
+        function isRooftopUnblocked(dateStr) {
+            return overridesData.some(o =>
+                o.override_type === 'unblock' &&
+                o.room_id == 3 &&
+                o.override_date === dateStr
+            );
+        }
+
+        function isRooftopManuallyBlocked(dateStr) {
+            return overridesData.some(o =>
+                o.override_type === 'block' &&
+                o.room_id == 3 &&
+                o.override_date === dateStr
+            );
         }
 
         function closeCalendarModal() {
@@ -2719,7 +2804,22 @@ header("Pragma: no-cache");
                 let dayClasses = ['calendar-day'];
                 if (currentDate.getTime() === today.getTime()) dayClasses.push('today');
                 if (currentDate < today) dayClasses.push('past');
-                if (currentDate.getDay() === 0 || currentDate.getDay() === 6) dayClasses.push('weekend');
+                if (isWeekendNightAdmin(dateStr)) dayClasses.push('weekend');
+                const holidayName = getHolidayNameForNight(dateStr);
+                if (holidayName) dayClasses.push('holiday');
+
+                // Rooftop auto-block status (only relevant when viewing Rooftop or All)
+                const isAutoBlocked = (calendarRoomFilter === 'all' || calendarRoomFilter == 3) &&
+                    (isWeekendNightAdmin(dateStr) || holidayName) &&
+                    !isRooftopUnblocked(dateStr);
+                const isUnblocked = (calendarRoomFilter === 'all' || calendarRoomFilter == 3) &&
+                    isRooftopUnblocked(dateStr) &&
+                    (isWeekendNightAdmin(dateStr) || holidayName);
+                if (isUnblocked) dayClasses.push('unblocked');
+
+                let dayIndicator = '';
+                if (holidayName) dayIndicator = '<span class="calendar-day-indicator" title="' + holidayName + '">🌸</span>';
+                else if (isWeekendNightAdmin(dateStr)) dayIndicator = '<span class="calendar-day-indicator" title="Weekend">⭐</span>';
 
                 let badgesHtml = '';
                 dayBookings.forEach(b => {
@@ -2739,8 +2839,9 @@ header("Pragma: no-cache");
                     badgesHtml += `<div style="font-size: 10px; color: rgba(1,20,120,0.5); text-align: center; margin-top: 2px;">+${dayBookings.length - 3} more</div>`;
                 }
 
-                html += `<div class="${dayClasses.join(' ')}" onclick="showDayBookings('${dateStr}', ${dayBookings.length})">
-                    <div class="calendar-date">${day}</div>
+                const clickableClass = dayBookings.length > 0 || isAutoBlocked || isUnblocked ? 'cursor: pointer;' : '';
+                html += `<div class="${dayClasses.join(' ')}" style="${clickableClass}" onclick="showDayBookings('${dateStr}', ${dayBookings.length}, ${isAutoBlocked}, ${isUnblocked})">
+                    <div class="calendar-date">${day}${dayIndicator}</div>
                     <div class="cal-badges-container">${badgesHtml}</div>
                 </div>`;
             }
@@ -2769,9 +2870,7 @@ header("Pragma: no-cache");
             renderCalendar();
         }
 
-        function showDayBookings(dateStr, count) {
-            if (count === 0) return;
-            
+        function showDayBookings(dateStr, count, isAutoBlocked = false, isUnblocked = false) {
             const date = new Date(dateStr);
             const title = date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             document.getElementById('day-bookings-title').textContent = title;
@@ -2789,8 +2888,34 @@ header("Pragma: no-cache");
             }
 
             let html = '';
+
+            // Rooftop auto-block / unblock status for this date
+            if ((calendarRoomFilter === 'all' || calendarRoomFilter == 3) && (isAutoBlocked || isUnblocked)) {
+                const holidayName = getHolidayNameForNight(dateStr);
+                const reason = holidayName ? `Legal Holiday: ${holidayName}` : 'Weekend (Rooftop priority)';
+                if (isUnblocked) {
+                    html += `
+                        <div style="padding: 12px 16px; border-radius: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 12px;">
+                            <div style="font-weight: 600; color: #166534; margin-bottom: 4px;">Rooftop Unblocked</div>
+                            <div style="font-size: 13px; color: rgba(1,20,120,0.7);">${reason}</div>
+                            <button onclick="removeRooftopUnblock('${dateStr}')" class="btn-modal btn-modal-cancel" style="margin-top: 8px; width: 100%;">Remove Unblock</button>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="padding: 12px 16px; border-radius: 10px; background: #fee2e2; border: 1px solid #fca5a5; margin-bottom: 12px;">
+                            <div style="font-weight: 600; color: #991b1b; margin-bottom: 4px;">Rooftop Auto-Blocked</div>
+                            <div style="font-size: 13px; color: rgba(1,20,120,0.7);">${reason}</div>
+                            <button onclick="unblockRooftopDate('${dateStr}')" class="btn-submit" style="margin-top: 8px; width: 100%;">Unblock Rooftop</button>
+                        </div>
+                    `;
+                }
+            }
+
             if (dayBookings.length === 0) {
-                html = '<p style="text-align: center; color: rgba(1,20,120,0.5); padding: 20px;">No bookings for this date</p>';
+                if (!html) {
+                    html = '<p style="text-align: center; color: rgba(1,20,120,0.5); padding: 20px;">No bookings for this date</p>';
+                }
             } else {
                 dayBookings.forEach(b => {
                     const status = String(b.status).toLowerCase().trim();
@@ -2811,6 +2936,55 @@ header("Pragma: no-cache");
             
             document.getElementById('day-bookings-list').innerHTML = html;
             document.getElementById('day-bookings-modal').style.display = 'flex';
+        }
+
+        async function unblockRooftopDate(dateStr) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/calendar-overrides`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
+                    body: JSON.stringify({ overrideDate: dateStr, roomId: 3, overrideType: 'unblock', reason: 'Admin unblock' })
+                });
+                if (res.ok) {
+                    showToast('success', 'Rooftop unblocked for ' + dateStr);
+                    await loadHolidaysAndOverrides();
+                    renderCalendar();
+                    closeDayBookingsModal();
+                } else {
+                    const data = await res.json();
+                    showToast('error', data.error || 'Failed to unblock date');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('error', 'Network error while unblocking date');
+            }
+        }
+
+        async function removeRooftopUnblock(dateStr) {
+            const override = overridesData.find(o =>
+                o.override_type === 'unblock' &&
+                o.room_id == 3 &&
+                o.override_date === dateStr
+            );
+            if (!override) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/calendar-overrides/${override.id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-api-key': currentApiKey }
+                });
+                if (res.ok) {
+                    showToast('success', 'Rooftop unblock removed for ' + dateStr);
+                    await loadHolidaysAndOverrides();
+                    renderCalendar();
+                    closeDayBookingsModal();
+                } else {
+                    const data = await res.json();
+                    showToast('error', data.error || 'Failed to remove unblock');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('error', 'Network error while removing unblock');
+            }
         }
 
         function closeDayBookingsModal() {
@@ -3283,8 +3457,9 @@ header("Pragma: no-cache");
                 document.getElementById('pricing-section').classList.add('active');
                 document.getElementById('analytics-section').style.display = 'none';
                 document.getElementById('analytics-section').classList.remove('active');
-                // Load current pricing when switching to pricing tab
+                // Load current pricing and holidays when switching to pricing tab
                 loadPricingData();
+                loadHolidaysAndOverrides().then(renderHolidays);
             } else if (tabName === 'analytics') {
                 document.getElementById('bookings-section').style.display = 'none';
                 document.getElementById('availability-section').style.display = 'none';
@@ -3325,15 +3500,15 @@ header("Pragma: no-cache");
                     rooms.forEach(room => {
                         if (room.id === 1) {
                             document.getElementById('gold-price').value = room.price || 4800;
-                            document.getElementById('gold-weekend-price').value = room.weekend_price || 5300;
+                            document.getElementById('gold-weekend-price').value = room.weekend_price || 4800;
                         } else if (room.id === 2) {
-                            document.getElementById('blue-price').value = room.price || 4800;
+                            document.getElementById('blue-price').value = room.price || 5300;
                             document.getElementById('blue-weekend-price').value = room.weekend_price || 5300;
                         } else if (room.id === 3) {
                             document.getElementById('rooftop-price').value = room.price || 8000;
-                            document.getElementById('rooftop-weekend-price').value = room.weekend_price || 10000;
+                            document.getElementById('rooftop-weekend-price').value = room.weekend_price || 8000;
                             document.getElementById('rooftop-price-6hr').value = room.price_6hr || 4000;
-                            document.getElementById('rooftop-weekend-price-6hr').value = room.weekend_price_6hr || 5000;
+                            document.getElementById('rooftop-weekend-price-6hr').value = room.weekend_price_6hr || 4000;
                         }
                     });
                 }
@@ -3341,6 +3516,13 @@ header("Pragma: no-cache");
                 console.error('Error loading pricing data:', error);
                 showToast('error', 'Failed to load pricing data');
             }
+        }
+
+        function syncRooftopWeekendPricesAndUpdate() {
+            // Weekend/holiday add-ons are computed in code. Keep weekend_price == base price in DB.
+            document.getElementById('rooftop-weekend-price').value = document.getElementById('rooftop-price').value;
+            document.getElementById('rooftop-weekend-price-6hr').value = document.getElementById('rooftop-price-6hr').value;
+            updateRoomPricing(3);
         }
 
         async function updateRoomPricing(roomId) {
@@ -3384,6 +3566,76 @@ header("Pragma: no-cache");
             } catch (error) {
                 console.error('Error updating pricing:', error);
                 showToast('error', 'Failed to update pricing');
+            }
+        }
+
+        function renderHolidays() {
+            const container = document.getElementById('holidays-list');
+            if (!container) return;
+            if (holidaysData.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: rgba(1,20,120,0.5); padding: 12px;">No holidays set</p>';
+                return;
+            }
+            container.innerHTML = holidaysData.map(h => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px;">
+                    <div>
+                        <div style="font-weight: 600; color: #011478; font-size: 14px;">${h.name}</div>
+                        <div style="font-size: 12px; color: rgba(1,20,120,0.6);">${h.holiday_date}</div>
+                    </div>
+                    <button onclick="deleteHoliday(${h.id})" class="btn-modal btn-modal-cancel" style="padding: 6px 12px; font-size: 12px;">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        async function addHoliday() {
+            const dateInput = document.getElementById('holiday-date');
+            const nameInput = document.getElementById('holiday-name');
+            const holidayDate = dateInput.value;
+            const name = nameInput.value.trim();
+            if (!holidayDate || !name) {
+                showToast('error', 'Please enter both date and name');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/holidays`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
+                    body: JSON.stringify({ holidayDate, name })
+                });
+                if (res.ok) {
+                    showToast('success', 'Holiday added');
+                    dateInput.value = '';
+                    nameInput.value = '';
+                    await loadHolidaysAndOverrides();
+                    renderHolidays();
+                } else {
+                    const data = await res.json();
+                    showToast('error', data.error || 'Failed to add holiday');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('error', 'Network error while adding holiday');
+            }
+        }
+
+        async function deleteHoliday(id) {
+            if (!confirm('Delete this holiday?')) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/holidays/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-api-key': currentApiKey }
+                });
+                if (res.ok) {
+                    showToast('success', 'Holiday deleted');
+                    await loadHolidaysAndOverrides();
+                    renderHolidays();
+                } else {
+                    const data = await res.json();
+                    showToast('error', data.error || 'Failed to delete holiday');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('error', 'Network error while deleting holiday');
             }
         }
 
