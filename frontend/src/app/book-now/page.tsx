@@ -12,14 +12,14 @@ const roomStaticData = {
     imagesCount: 15,
     folder: 'gold-room',
     prefix: 'gold',
-    features: ['50 SQM with balcony', 'Ideal for 2 guests', '1 King size bed', '1 Bathroom', '4-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth Speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space']
+    features: ['50 SQM with balcony', 'Ideal for 2 guests', '1 King size bed', '1 Bathroom', '4-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth Speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space', 'Board Games', 'Free Breakfast for Two (2)']
   },
   2: {
     image: '/img/blue-room/blue4.jpg',
     imagesCount: 13,
     folder: 'blue-room',
     prefix: 'blue',
-    features: ['50 SQM with balcony', 'Ideal for 4 guests', '2 Queen size beds', '1 Bathroom', '6-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space']
+    features: ['50 SQM with balcony', 'Ideal for 4 guests', '2 Queen size beds', '1 Bathroom', '6-Seater Dining Table', 'Kitchen cabinet with sink', 'Personal Ref', 'Air conditioning and WiFi', '55" Smart TV with Bluetooth speaker', 'Toiletries, towels, and bathrobe', 'Contemporary artwork', 'Parking space', 'Board Games', 'Free Breakfast for Two (2)']
   },
   3: {
     image: '/img/rooftop/rooftop1.jpg',

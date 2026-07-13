@@ -45,6 +45,8 @@ const faqs = [
         Hot Shower<br />
         Humidifier<br />
         Flat Iron and Ironing Board, steamer – available upon request<br />
+        Board Games<br />
+        Free Breakfast for Two (2)<br />
         <br />
         <strong>Rooftop Lounge</strong><br />
         Dining area – Indoor and outdoor<br />

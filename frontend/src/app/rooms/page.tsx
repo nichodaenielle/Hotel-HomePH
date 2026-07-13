@@ -195,6 +195,8 @@ function GoldRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
             <p>Toiletries, towels, and bathrobe</p>
             <p>Contemporary artwork</p>
             <p>Parking space</p>
+            <p>Board Games</p>
+            <p>Free Breakfast for Two (2)</p>
           </div>
         </div>
         <div className="flex items-center justify-between gap-4 pt-4 border-t border-brand-blue/10">
@@ -295,6 +297,8 @@ function BlueRoomCard({ delay = 0, room }: { delay?: number; room?: any }) {
             <p>Toiletries, towels, and bathrobe</p>
             <p>Contemporary artwork</p>
             <p>Parking space</p>
+            <p>Board Games</p>
+            <p>Free Breakfast for Two (2)</p>
           </div>
         </div>
         <div className="flex items-center justify-between gap-4 pt-4 border-t border-brand-blue/10">
