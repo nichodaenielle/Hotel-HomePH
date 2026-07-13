@@ -377,3 +377,180 @@ All admin endpoints use `x-api-key` authentication.
 4. Run `backend/migrations/update_base_prices.sql` if base prices change
 
 Keep frontend pricing and admin dashboard info panel in sync whenever pricing is updated.
+
+---
+
+## Content & UI Updates — July 13, 2026 (Session 2)
+
+### Overview
+
+This session covers all non-pricing content updates: house rules, policies, room features, FAQ revisions, payment channel changes, and UI tweaks.
+
+---
+
+### 1. Room Features Updated
+
+#### Gold Room & Blue Room (all three display locations)
+Added to feature lists:
+- Board Games
+- Free Breakfast for Two (2)
+
+**Files:** `frontend/src/app/rooms/page.tsx`, `frontend/src/app/book-now/page.tsx` (roomStaticData), `frontend/src/app/faqs/page.tsx`
+
+#### Rooftop Lounge (all three display locations)
+Added / updated:
+- Microwave
+- Hot and Cold Water Dispenser *(previously "Water Dispenser")*
+- Microphone for Karaoke – available upon request *(moved to end of list)*
+
+**Files:** `frontend/src/app/rooms/page.tsx`, `frontend/src/app/book-now/page.tsx` (roomStaticData), `frontend/src/app/faqs/page.tsx`
+
+---
+
+### 2. House Rules & Policies Updated
+
+Updated in both `frontend/src/app/info/page.tsx` and `frontend/src/app/book-now/page.tsx` (Rules & Regulations step).
+
+#### Check-in & Check-out
+Added:
+- Refundable security deposit of ₱3,000 upon check-in.
+
+#### General Rules
+| Old | New |
+|-----|-----|
+| No smoking inside the rooms. | No smoking or vaping inside the unit, shared common areas, and hallways. Smoking and vaping area is at the rooftop balcony. |
+| No pets allowed. | No pets allowed in the hallways, room, and common areas. A nearby pet hotel is available for a separate fee. |
+| *(not present)* | No cooking allowed. |
+| Respect quiet hours (10 PM – 7 AM). | Quiet hours: 10 PM – 7 AM. |
+
+#### Cancellation & No-Show Policy
+| Old | New |
+|-----|-----|
+| Full refund if canceled up to 4 days before check-in. | **Full Refund:** Cancellations made more than 30 days before arrival. |
+| 50% refund if canceled 3 days or less before check-in. | **Partial Refund:** Cancellations made 14–30 days before arrival. |
+| *(not present)* | **No Refund:** Cancellations made within 14 days of arrival. |
+| *(not present)* | No-shows may result in forfeiture of reservation payments. |
+
+#### Damages & Liability
+| Old | New |
+|-----|-----|
+| Security deposit of ₱3,000 per room is required upon check-in. | Damages or violations incurred may be charged to the security deposit. |
+
+---
+
+### 3. Print Rental Agreement Button (Info Page)
+
+- **Label changed:** "Print Rules" → "Print Rental Agreement"
+- **Link:** `/rules/rental-agreement.pdf` (PDF relocated from root to `frontend/public/rules/`)
+- **Download filename:** `Hotel_at_Home_Rental_Agreement.pdf`
+
+**File:** `frontend/src/app/info/page.tsx`
+
+---
+
+### 4. Rental Agreement Button (Book Now — Rules Step)
+
+- Added a yellow "Rental Agreement" button above the checkbox that opens `/rules/rental-agreement.pdf` in a new tab.
+- **Checkbox label changed:** "I have read and agree to the house rules, cancellation policy, and terms of stay." → "I have read and agree to the terms of stay and cancellation policy as indicated on the rental agreement."
+
+**File:** `frontend/src/app/book-now/page.tsx`
+
+---
+
+### 5. FAQ Updates
+
+#### Answers Updated
+
+| Question | Old Answer (summary) | New Answer (summary) |
+|----------|---------------------|---------------------|
+| Are walk-in guests allowed? | No. Prior booking required. | Yes. Subject to availability. Contact via designated numbers/social media during operating hours. |
+| How far from Tagaytay? | ~5–15 minutes depending on traffic. | A minute away to Tagaytay boundary; ~5–15 minutes to Tagaytay ridge. |
+| What amenities are included? (Rooftop) | Water Dispenser, Microwave, Microphone for Karaoke – by request | Microwave, Hot and Cold Water Dispenser, Microphone for Karaoke – available upon request |
+| Can we cook or bring food? | Cooking inside room/lounge not allowed. | Expanded: portable gas stoves/induction cookers/personal cooking appliances strictly prohibited; microwave provided for reheating only. |
+| Is breakfast included? | Complimentary; menu provided; pre-order encouraged. | "Yes. Breakfast is offered as a complimentary amenity. Should you decide not to avail of it, the accommodation rate will remain the same." |
+| Are pets allowed? | Not allowed inside building; nearby pet hotel available. | Not permitted in guest rooms, hallways, or common areas; nearby pet hotel for convenience at additional cost; contact for recommendations. |
+| Is smoking allowed? | Not allowed inside rooms and enclosed rooftop areas; open areas provided. | Not allowed in all rooms, hallways, room balconies, and indoor areas; permitted only at designated rooftop balcony smoking areas. |
+| Is housekeeping provided? | Available upon request; additional charges for extended stays. | Available for an additional fee; subject to property's operating schedule. |
+
+#### New Questions Added (after "What amenities are included?")
+
+| Question | Answer |
+|----------|--------|
+| What are the payment terms? | 50% reservation fee required, deducted from total. Payment via Cash, GCash, bank transfer, or other approved methods. Reservation not confirmed until payment received and acknowledged. Unpaid balance and security deposit settled upon check-in. |
+| Are visitors allowed? | Registered guests may receive up to four (4) visitors at a time. Visitors may stay for a maximum of 2–3 hours and up to 10PM only. |
+
+**File:** `frontend/src/app/faqs/page.tsx`
+
+---
+
+### 6. Contact Numbers Updated (Site-wide)
+
+| Location | Old Numbers | New Numbers |
+|----------|------------|------------|
+| All frontend pages, footer, FAQs | (previous numbers) | 0968-190-7363, 0917-880-0387 |
+
+**Files:** `frontend/src/components/Footer.tsx`, `frontend/src/app/faqs/page.tsx`, `backend/server.js` (email templates)
+
+---
+
+### 7. "Hotel-Inspired Vacation Rental" Language
+
+Replaced boutique hotel references with vacation rental language across descriptive copy (brand name "Hotel at Home" unchanged).
+
+**Files:** `frontend/src/app/rooms/page.tsx`, `frontend/src/app/info/page.tsx`, `frontend/src/app/layout.tsx`
+
+---
+
+### 8. Booking Page — Room Selection UI
+
+- **Price label changed:** "FROM ₱X,XXX.XX / NIGHT" → "STARTS AT ₱X,XXX.XX / NIGHT"
+- **Text shadow added:** subtle drop shadow on accent price label (`0 1px 2px rgba(0,0,0,0.08)`)
+
+**File:** `frontend/src/app/book-now/page.tsx`
+
+---
+
+### 9. Payment Channel Updated
+
+#### GCash
+| Field | Old | New |
+|-------|-----|-----|
+| Name | Hermilino Jr. Calubiran | DE***R CH**S S. |
+| Number | +63 917 887 6444 | 0917 880 **** |
+| User ID | *(not shown)* | **********ZLEGCK |
+| QR Image | `gcash.jpg` | `gcash.png` (new image) |
+
+#### Bank Transfer
+| Field | Old | New |
+|-------|-----|-----|
+| Bank | BDO Unibank, Inc. | Bank of the Philippine Islands (BPI) |
+| Account Type | *(not shown)* | Hotel |
+| Account Name | Hermilino Calubiran, Jr. | DE···R CH··S PA···A SO·····N |
+| Account Number | 010100143296 | ···········409 |
+| QR Image | *(none)* | `bpi.png` (new image, tappable thumbnail + fullscreen) |
+
+The Bank Transfer section now has the same tappable QR thumbnail + fullscreen modal as GCash.
+
+**Files:** `frontend/src/app/book-now/page.tsx`, `frontend/public/img/payment/bpi.png`, `frontend/public/img/payment/gcash.png`
+
+---
+
+### Files Modified (Session 2)
+
+| File | Changes |
+|------|---------|
+| `frontend/src/app/info/page.tsx` | Vacation rental language, rules/policies update, rental agreement button |
+| `frontend/src/app/book-now/page.tsx` | Rules update, rental agreement button, room features, pricing label, payment channels |
+| `frontend/src/app/rooms/page.tsx` | Room features, vacation rental language, "Starts at" price display |
+| `frontend/src/app/faqs/page.tsx` | FAQ answers updated, 2 new FAQs added, amenities updated |
+| `frontend/src/app/layout.tsx` | Meta description updated to vacation rental language |
+| `frontend/src/components/Footer.tsx` | Contact numbers updated |
+| `backend/server.js` | Contact numbers updated in email templates |
+
+### New Files (Session 2)
+
+| File | Purpose |
+|------|---------|
+| `frontend/public/rules/rental-agreement.pdf` | Rental agreement PDF (relocated from root) |
+| `frontend/public/img/payment/bpi.png` | BPI InstaPay QR code image |
+| `frontend/public/img/payment/gcash.png` | GCash QR code image (replaces gcash.jpg) |
