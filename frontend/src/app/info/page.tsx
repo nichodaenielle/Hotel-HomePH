@@ -300,8 +300,8 @@ export default function InfoPage() {
               <h2 className="mt-4 text-3xl font-semibold text-brand-blue md:text-4xl">A calm, comfortable stay for every guest</h2>
             </div>
             <a
-              href="/rules/rules.pdf"
-              download="Hotel_at_Home_Rules.pdf"
+              href="/rules/rental-agreement.pdf"
+              download="Hotel_at_Home_Rental_Agreement.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent-300 px-6 text-sm font-semibold text-brand-blue transition-all duration-300 hover:shadow-[0_0_15px_rgba(255,215,0,0.3)] hover:-translate-y-0.5 active:scale-95"
@@ -309,7 +309,7 @@ export default function InfoPage() {
               <svg className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
-              Print Rules
+              Print Rental Agreement
             </a>
           </div>
 

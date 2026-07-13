@@ -26,7 +26,7 @@ const roomStaticData = {
     imagesCount: 13,
     folder: 'rooftop',
     prefix: 'rooftop',
-    features: ['150 SQM', 'Outdoor and indoor seating', 'Bar counter', 'Dining table setup', 'Air conditioning and WiFi', '65" Smart TV with Bluetooth speaker', 'Microphone for Karaoke - available upon request', 'Contemporary artwork']
+    features: ['150 SQM', 'Outdoor and indoor seating', 'Bar counter', 'Dining table setup', 'Air conditioning and WiFi', '65" Smart TV with Bluetooth speaker', 'Microphone for Karaoke - available upon request', 'Contemporary artwork', 'Water Dispenser', 'Microwave']
   }
 };
 

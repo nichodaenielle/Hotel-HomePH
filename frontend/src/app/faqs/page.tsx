@@ -52,7 +52,9 @@ const faqs = [
         Dining area – Indoor and outdoor<br />
         Wine and liquor – By pre-order upon check in. Outside alcoholic drinks are subject to ₱500 corkage fee per bottle (wine/liquor)<br />
         65” Smart TV with Bluetooth speaker<br />
-        Microphone for Karaoke – by request
+        Microphone for Karaoke – by request<br />
+        Water Dispenser<br />
+        Microwave
       </>
     )
   },
