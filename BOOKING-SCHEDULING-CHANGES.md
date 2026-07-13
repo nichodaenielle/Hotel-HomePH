@@ -2,14 +2,14 @@
 
 **Date**: July 13, 2026  
 **Project**: Hotel at Home PH  
-**Status**: Implemented (pending testing)  
-**Priority**: High — required reference for future pricing calculations
+**Status**: Implemented & Deployed  
+**Priority**: High — required reference for pricing and scheduling logic
 
 ---
 
 ## Overview
 
-Implemented changes to the booking scheduling system to:
+Implemented changes to the booking scheduling system and pricing:
 
 1. Remove the previous "3-days prior" booking limitation and allow same-day bookings.
 2. Categorize weekend nights as **Friday check-in → Saturday check-out** and **Saturday check-in → Sunday check-out**.
@@ -18,22 +18,23 @@ Implemented changes to the booking scheduling system to:
    - `holiday_date` check-in → `holiday_date + 1` check-out
 4. Block the Rooftop Lounge by default on weekends and legal holidays.
 5. Allow Admin override to unblock specific Rooftop dates.
-
-> **Important for future pricing work**: This change establishes the rules for identifying weekend and holiday nights. The current implementation uses `weekend_price` for Friday/Saturday nights. When holiday pricing is added later, use the holiday-categorization logic documented below and the `holidays` table as the single source of truth.
+6. **Flexible pricing** — dynamic per-night pricing with weekend/holiday add-ons and peak season surcharges (computed in frontend code, not stored as separate DB columns).
+7. Updated contact numbers site-wide to `0968-190-7363` and `0917-880-0387`.
 
 ---
 
 ## Table of Contents
 
 1. [Business Rules](#business-rules)
-2. [Database Changes](#database-changes)
-3. [Backend Changes](#backend-changes)
-4. [Frontend Changes](#frontend-changes)
-5. [Admin Dashboard Changes](#admin-dashboard-changes)
-6. [Files Modified](#files-modified)
-7. [New Files](#new-files)
-8. [Testing Checklist](#testing-checklist)
-9. [Future Pricing Notes](#future-pricing-notes)
+2. [Flexible Pricing Rules](#flexible-pricing-rules)
+3. [Database Changes](#database-changes)
+4. [Backend Changes](#backend-changes)
+5. [Frontend Changes](#frontend-changes)
+6. [Admin Dashboard Changes](#admin-dashboard-changes)
+7. [Files Modified](#files-modified)
+8. [New Files](#new-files)
+9. [Testing Checklist](#testing-checklist)
+10. [Future Pricing Notes](#future-pricing-notes)
 
 ---
 
@@ -70,6 +71,63 @@ A legal holiday is stored as a single `holiday_date` in the `holidays` table. Ea
 - Gold Room (`room_id = 1`) and Blue Room (`room_id = 2`) are **NOT** auto-blocked on weekends/holidays.
 - Room rentals retain priority over Rooftop bookings.
 - An Admin can **unblock** a specific Rooftop date via the admin dashboard calendar or `POST /api/admin/calendar-overrides`.
+
+---
+
+## Flexible Pricing Rules
+
+All add-ons are computed in **frontend code** (`book-now/page.tsx`). The DB stores only the base price.
+
+### Base Prices
+
+| Room | Base Price |
+|------|-----------|
+| Gold Room (id=1) | ₱4,800 / night |
+| Blue Room (id=2) | ₱5,300 / night |
+| Rooftop 12hr (id=3) | ₱8,000 / slot |
+| Rooftop 6hr (id=3) | ₱4,000 / slot |
+
+### Weekend / Holiday Add-ons
+
+Applied when check-in night is a **Friday, Saturday, or legal holiday night**:
+
+| Room | Add-on |
+|------|--------|
+| Gold Room | +₱500 / night |
+| Blue Room | +₱500 / night |
+| Rooftop 12hr | +₱2,000 / slot |
+| Rooftop 6hr | +₱1,000 / slot |
+
+### Peak Season Add-ons
+
+Applied on top of base + weekend/holiday add-on:
+
+| Period | Gold/Blue Rooms | Rooftop 12hr | Rooftop 6hr |
+|--------|----------------|--------------|-------------|
+| October / November | +₱200 / night | +₱500 / slot | +₱250 / slot |
+| December / January / February | +₱500 / night | +₱1,000 / slot | +₱500 / slot |
+
+### Formula
+
+```
+Final Price = Base Price + Weekend/Holiday Add-on + Peak Season Add-on
+```
+
+**Example — Gold Room, Saturday, November:**
+`₱4,800 + ₱500 (weekend) + ₱200 (Oct/Nov) = ₱5,500`
+
+### Implementation
+
+- Helper functions in `frontend/src/app/book-now/page.tsx`:
+  - `getPeakSeasonAddon(month, roomId, duration)` — returns peak season add-on
+  - `isHolidayNight(dateStr, holidayDates)` — checks if a date is a holiday night
+- `holidayDates` state fetched from `GET /api/admin/holidays` on page load
+- Gold/Blue: iterates each night in the stay and sums per-night prices
+- Rooftop: single slot, applies add-ons to check-in date
+
+### DB State
+
+`weekend_price` is set equal to `price` for all rooms — add-ons are **not** stored in the DB. Migration: `backend/migrations/update_base_prices.sql`.
 
 ---
 
@@ -213,18 +271,23 @@ All admin endpoints use `x-api-key` authentication.
 
 ## Files Modified
 
-- `frontend/src/app/book-now/page.tsx`
-- `frontend/src/app/page.tsx`
-- `backend/lib/availability.js`
-- `backend/server.js`
-- `backend/schema.sql`
-- `backend/schema-dev.sql`
-- `admin-dashboard/index.php`
+- `frontend/src/app/book-now/page.tsx` — flexible pricing logic, holiday fetch
+- `frontend/src/app/rooms/page.tsx` — "Starts at" price display with add-on notes
+- `frontend/src/app/page.tsx` — removed 3-day buffer
+- `frontend/src/components/Footer.tsx` — updated contact numbers
+- `frontend/src/app/faqs/page.tsx` — updated contact numbers
+- `backend/lib/availability.js` — weekend/holiday helpers
+- `backend/server.js` — new admin endpoints, auto-block logic, updated contact numbers in email templates
+- `backend/schema.sql` — added holidays and calendar_overrides tables
+- `backend/schema-dev.sql` — same
+- `admin-dashboard/index.php` — pricing section overhaul, legal holidays UI, auto add-on info panel
 
 ## New Files
 
-- `backend/migrations/add_holidays_and_overrides.sql`
-- `backend/migrations/add_holidays_and_overrides.pg.sql`
+- `backend/migrations/add_holidays_and_overrides.sql` — creates holidays and calendar_overrides tables
+- `backend/migrations/add_holidays_and_overrides.pg.sql` — PostgreSQL variant
+- `backend/migrations/update_base_prices.sql` — sets base prices; weekend_price = price (add-ons in code)
+- `.gitignore` — excludes `admin-dashboard/index.html` (local dev only)
 - `BOOKING-SCHEDULING-CHANGES.md` (this file)
 
 ---
@@ -269,32 +332,48 @@ All admin endpoints use `x-api-key` authentication.
 - [ ] `POST /api/bookings` rejects Rooftop weekend/holiday bookings.
 - [ ] `GET /api/bookings/dates/3` includes auto-block entries.
 
+### Flexible Pricing
+
+- [ ] Gold Room weekday (non-peak) shows ₱4,800/night.
+- [ ] Gold Room Friday night shows ₱5,300 (4800 + 500).
+- [ ] Gold Room Saturday November shows ₱5,500 (4800 + 500 + 200).
+- [ ] Gold Room Saturday December shows ₱5,800 (4800 + 500 + 500).
+- [ ] Blue Room weekday shows ₱5,300/night base.
+- [ ] Blue Room Friday night shows ₱5,800 (5300 + 500).
+- [ ] Rooftop 12hr weekday shows ₱8,000.
+- [ ] Rooftop 12hr weekend shows ₱10,000 (8000 + 2000).
+- [ ] Rooftop 12hr weekend November shows ₱10,500 (8000 + 2000 + 500).
+- [ ] Rooftop 6hr weekday shows ₱4,000.
+- [ ] Rooftop 6hr weekend shows ₱5,000 (4000 + 1000).
+- [ ] Holiday night applies same add-on as weekend.
+- [ ] Rooms page shows "Starts at ₱4,800" for Gold, "Starts at ₱5,300" for Blue.
+- [ ] Admin dashboard pricing section shows auto add-on info panel.
+
 ---
 
 ## Future Pricing Notes
 
-> This section is the primary reason this document exists. Use it when implementing holiday pricing.
+> Holiday pricing has been implemented. Weekend and holiday nights now use the same add-on (+₱500 rooms, +₱2,000 rooftop 12hr, +₱1,000 rooftop 6hr). See [Flexible Pricing Rules](#flexible-pricing-rules).
 
-### Current Pricing Logic
+### Current Pricing Logic (as of July 13, 2026)
 
-- **Weekday nights**: use `rooms.price`
-- **Weekend nights (Friday/Saturday check-ins)**: use `rooms.weekend_price`
-
-### Recommended Next Steps for Holiday Pricing
-
-1. **Add holiday price columns** to the `rooms` table:
-   - `holiday_price` (for Gold/Blue nightly holiday rate)
-   - `holiday_price_6hr` / `holiday_price_12hr` (for Rooftop slot holiday rate if needed)
-2. **Update the frontend pricing calculation** in `frontend/src/app/book-now/page.tsx`:
-   - When iterating each night, check if the night is a holiday night using the same rule as `isWeekendNight`/holiday logic.
-   - If holiday, prefer `holidayPrice`; otherwise use `weekendPrice`; otherwise use `price`.
-3. **Update backend pricing validation** if the backend computes totals independently.
-4. **Admin dashboard**: add holiday price inputs next to weekend price inputs in the Pricing section.
+- **Weekday nights**: `rooms.price` (base)
+- **Weekend nights (Fri/Sat check-ins)**: `rooms.price` + add-on in code
+- **Holiday nights**: `rooms.price` + same add-on as weekends (in code)
+- **Peak season**: additional add-on in code on top of the above
 
 ### Single Sources of Truth
 
-- **Weekend nights**: `availability.isWeekendNight(dateStr)` (Friday or Saturday).
-- **Holiday nights**: `availability.getHolidayNights(executor, startDate, endDate)`.
-- **Admin override**: `calendar_overrides` table with `room_id = 3` and `override_type = 'unblock'`.
+- **Weekend nights**: check-in day is Friday (5) or Saturday (6) — `currentDate.getDay() === 5 || 6`
+- **Holiday nights**: `isHolidayNight(dateStr, holidayDates)` in `book-now/page.tsx`; holiday list from `GET /api/admin/holidays`
+- **Admin override**: `calendar_overrides` table with `room_id = 3` and `override_type = 'unblock'`
+- **Peak season**: `getPeakSeasonAddon(month, roomId, duration)` in `book-now/page.tsx`
 
-Keep these in sync between frontend and backend whenever pricing is updated.
+### If Pricing Rules Change
+
+1. Update `getPeakSeasonAddon()` in `frontend/src/app/book-now/page.tsx`
+2. Update the weekend/holiday add-on constants in the `roomTotal` calculation block (same file)
+3. Update the auto add-on info panel in `admin-dashboard/index.php` (`#pricing-section` header)
+4. Run `backend/migrations/update_base_prices.sql` if base prices change
+
+Keep frontend pricing and admin dashboard info panel in sync whenever pricing is updated.
